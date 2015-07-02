@@ -53,6 +53,8 @@ x=<b id="RToffset">0</b> plus half the cutter diameter.
 <script>
 "use strict";
 
+var DEGSYM = "\u00B0"; // degree symbol in UTF-8 (unicode)
+
 /*
  * Build all the flywheel pictures here.
  *
@@ -735,14 +737,14 @@ function drawFlywheelDims(canvas, fly) {
 	drawAngDim(context,
 		offsetx, offsety, 0, si0.leftOuterAngle,
 		fradius * 0.88,
-		si0.leftOuterAngle.toFixed(1) + "°", 0.98,
+		si0.leftOuterAngle.toFixed(1) + DEGSYM, 0.98,
 		"black", pattern_solid);
 	
 	if (si0.rightOuterAngle > si0.leftOuterAngle) {  // should always be true
 		drawAngDim(context,
 			offsetx, offsety, 0, si0.rightOuterAngle,
 			fradius * 0.95,
-			si0.rightOuterAngle.toFixed(1) + "°", 0.98,
+			si0.rightOuterAngle.toFixed(1) + DEGSYM, 0.98,
 			"black", pattern_solid);
 	}
 	
@@ -750,7 +752,7 @@ function drawFlywheelDims(canvas, fly) {
 	drawAngDim(context,
 		offsetx, offsety, 0, si0.leftInnerAngle,
 		fradius * 0.50,
-		si0.leftInnerAngle.toFixed(1) + "°", 0.98,
+		si0.leftInnerAngle.toFixed(1) + DEGSYM, 0.98,
 		"black", pattern_solid);
 	
 	if (si0.rightInnerAngle > si0.leftInnerAngle) {
@@ -758,7 +760,7 @@ function drawFlywheelDims(canvas, fly) {
 		drawAngDim(context,
 			offsetx, offsety, 0, si0.rightInnerAngle,
 			fradius * 0.57,
-			si0.rightInnerAngle.toFixed(1) + "°", 0.98,
+			si0.rightInnerAngle.toFixed(1) + DEGSYM, 0.98,
 			"black", pattern_solid);
 	}	
 
@@ -767,7 +769,7 @@ function drawFlywheelDims(canvas, fly) {
 	drawAngDim(context,
 		offsetx, offsety, -fly.spokedeg, 0,
 		fradius * 0.91,
-		fly.spokedeg.toFixed(1) + "°", 0.98,
+		fly.spokedeg.toFixed(1) + DEGSYM, 0.98,
 		"black", pattern_solid);
 
 	// Add degree marks for each spoke.  Get this out of spkinfo
@@ -776,7 +778,7 @@ function drawFlywheelDims(canvas, fly) {
 	var spk;
 	for (spk=0; spk < fly.spokes; spk++) {
 		var si = fly.spkinfo[spk];
-		var label = si.angle.toFixed(1) + "°";
+		var label = si.angle.toFixed(1) + DEGSYM;
 		var textwidth = context.measureText(label).width;
 		var dest = rotate(toPoint(0, fradius * 1.07), si.angle);
 		context.fillText(label, offsetx+dest.x - textwidth/2, offsety-dest.y);
