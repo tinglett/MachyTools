@@ -7,34 +7,34 @@
 </head>
 
 <body onLoad="buildFlywheels()">
-<h2>Flywheel builder v1</h2>
+<h2>Flywheel builder v1.1</h2>
 <form name="flywheelParms" onChange="buildFlywheels()">
 <!-- Use a select for spokes so crazy numbers (like fractions) can't happen -->
 <canvas id="flywheelDemoCanvas" width="500" height="500"
   style="border:1px solid #d3d3d3;">
 Your browser does not support the canvas element.  Sorry, this web page won't work for you.
 </canvas>
+<canvas id="flywheelDimsCanvas" width="500" height="500"
+  style="border:1px solid #d3d3d3;">
+</canvas>
 <p><b>Dimensions:   </b>
 Spokes: <select id="flywheelSpokes">
-		<option value="1">1</option>
-		<option value="2">2</option>
 		<option value="3">3</option>
 		<option value="4">4</option>
 		<option value="5" selected>5</option>
 		<option value="6">6</option>
 		<option value="7">7</option>
 		<option value="8">8</option>
-		<option value="9">9</option>
 		</select>
 <table>
 <tr><td>Flywheel diameter </td> <td><input id="flywheelDiameter" type="text" value="4.000" size="4" maxlength="8"></td>
-    <td>Rim Thickness </td> <td><input id="flywheelRimThick" type="text" value="0.3125" size="4" maxlength="8"></td></tr>
+    <td>Rim Thickness </td> <td><input id="flywheelRimThick" type="text" value="0.312" size="4" maxlength="8"></td></tr>
 <tr><td>Hub diameter     </td> <td><input id="flywheelHubDiameter" type="text" value="0.625" size="4" maxlength="8"></td>
     <td>Shaft diameter   </td> <td><input id="flywheelShaftDiameter" type="text" value="0.313" size="4" maxlength="8"></td></tr>
 <tr><td>Inner hole diameter</td> <td><input id="flywheelInnerHoleDiameter" type="text" value="0.375" size="4" maxlength="8"></td>
     <td>Outer hole diameter</td> <td><input id="flywheelOuterHoleDiameter" type="text" value="0.188" size="4" maxlength="8"></td></tr>
 <tr><td>Inner hole distance</td> <td><input id="flywheelInnerHoleDistance" type="text" value="0.625" size="4" maxlength="8"></td>
-    <td>Outer hole distance</td> <td><input id="flywheelOuterHoleDistance" type="text" value="1.4375" size="4" maxlength="8"></td></tr>
+    <td>Outer hole distance</td> <td><input id="flywheelOuterHoleDistance" type="text" value="1.438" size="4" maxlength="8"></td></tr>
 <tr><td>Inner hole angle</td> <td><input id="flywheelInnerHoleAngle" type="text" value="36.0" size="4" maxlength="8"></td>
     <td>Outer hole angle</td> <td><input id="flywheelOuterHoleAngle" type="text" value="8.0" size="4" maxlength="8"></td></tr>
 </table>
@@ -89,6 +89,9 @@ function buildFlywheels() {
 	
 	var canvas = document.getElementById("flywheelDemoCanvas");
 	drawFlywheelDemo(canvas, fly);
+	var canvasdims = document.getElementById("flywheelDimsCanvas");
+	drawFlywheelDemo(canvasdims, fly);
+	drawFlywheelDims(canvasdims, fly);
 
 	var RTrotate = document.getElementById("RTrotate");
 	var RToffset = document.getElementById("RToffset");
@@ -257,6 +260,101 @@ function drawRadialLine(context, x, y, angleDeg, length, color, pattern)
 	// subtract y to go up because canvas has 0,0 in the upper left
 	context.lineTo(x+dest.x, y-dest.y);
 	context.stroke();
+	context.restore();
+}
+
+/* Same as drawRadialLine, except now drawing a dimension line.
+ * This means adding arrowheads and a dimension label.
+ * The labelpos is the % of the way from start to end for the
+ * center of the label.
+ */
+function drawRadialDim(context,
+		x, y, angleDeg,
+		startlen, length,
+		label, labelpos,
+		color, pattern)
+{
+	context.save();
+	if (color)
+		context.strokeStyle = color;
+	if (pattern && context.setLineDash)
+		context.setLineDash(pattern);
+	
+	// We will draw a "horizontal" line and let canvas do the rotating for us.
+	// We use horizontal because that is how text is drawn.  This makes it a bit
+	// more complicated because we must interpret angleDeg=0 as "up".
+	// Since we want horizontal, we'll just subtract 90 degrees.
+	context.translate(x,y);		// Now 0,0 is the center.
+	context.rotate((angleDeg-90)*Math.PI/180);
+
+	context.beginPath();
+	context.moveTo(startlen,0);
+	context.lineTo(length, 0);
+	// draw end arrowhead since we are here
+	context.lineTo(length-5, -3);
+	context.moveTo(length, 0);
+	context.lineTo(length-5, 3);
+	// draw start arrowhead
+	context.moveTo(startlen,0);
+	context.lineTo(startlen+5, -3);
+	context.moveTo(startlen,0);
+	context.lineTo(startlen+5, 3);
+	// Now draw the label in the middle
+	var textwidth = context.measureText(label).width;
+	context.fillStyle = color;
+	context.fillText(label, startlen+((length-startlen)*labelpos)-(textwidth/2), -3);
+	context.stroke();
+	context.restore();
+}
+
+/* This draws an angle dimension line.
+ *
+ * x,y			Center point of angle
+ * start, end	Start/end of angle in degrees with 0 as up.
+ * length		Length of dimension lines
+ * label		The label to draw.  Probably end - start :)
+ * labelpos		The percentage up the dimension lines to draw the
+ *				dimension arc and label.
+ * context, color and pattern define drawing context to use.
+ */
+function drawAngDim(context,
+		x, y, start, end,
+		length,
+		label, labelpos,
+		color, pattern)
+{
+	var srad = degreesToRadians(start-90);
+	var erad = degreesToRadians(end-90);
+	var sdim = rotate(toPoint(0, length), start);
+	var edim = rotate(toPoint(0, length), end);
+
+	context.save();
+	if (color)
+		context.strokeStyle = color;
+	if (pattern && context.setLineDash)
+		context.setLineDash(pattern);
+	context.beginPath();
+	// Draw dimension lines first.
+	context.moveTo(x,y);
+	context.lineTo(x+sdim.x, y-sdim.y);
+	context.moveTo(x,y);
+	context.lineTo(x+edim.x, y-edim.y);
+	context.stroke();
+	context.beginPath();
+	context.arc(x,y,length*labelpos,srad,erad);
+	context.stroke();
+
+	// Now draw the label.  We center this on the arc and want it rotated to
+	// match the arc.  Let the canvas do the rotation.  Remember up is 0 deg
+	// so I need to subtract 90 to get that.  HOWEVER, we want the text 90
+	// degrees from the angle anyway, so it works out without this!  Sweet.
+	context.translate(x,y);		// Now 0,0 is the center.
+	context.rotate((start+end)/2*Math.PI/180);
+	context.fillStyle = color;
+	var textwidth = context.measureText(label).width;
+	var textheight = context.measureText(label).height;
+	context.fillText(label, -textwidth/2, -length*labelpos-5);
+
 	context.restore();
 }
 
@@ -442,7 +540,8 @@ function calculateFlywheel(
 	return fly;
 }
 
-/* Draw the Flywheel
+/* Draw the Flywheel.
+ *
  */
 function drawFlywheelDemo(canvas, fly) {
 
@@ -565,6 +664,125 @@ function drawFlywheelDemo(canvas, fly) {
 
 
 	}
+}
+
+/* Draw the Flywheel dimension markings.
+ *
+ */
+function drawFlywheelDims(canvas, fly) {
+
+	/* Now calculate offsets and a scaling factor so we can draw the
+	 * flywheel the middle of the canvas.  We scale it to 90% of the space
+	 * so that dimension lines can extend beyond the diameter.
+	 */
+	var context = canvas.getContext("2d");
+	var offsetx = canvas.width / 2;
+	var offsety = canvas.height / 2;
+	var fradius =  Math.min(canvas.width, canvas.height) * 0.90 / 2;
+	var fscale = fradius / fly.flywheelRadius;
+	var si0 = fly.spkinfo[0];
+					
+	/* First, dim the flywheel by drawing a transparent white rectangle over it.  Cool, no? :) */
+	context.save();
+	context.fillStyle="white";
+	context.globalAlpha="0.65";
+	context.fillRect(0,0,canvas.width,canvas.height);
+	context.restore();
+
+	// Radial dimensions from the center of the flywheel.
+	// These are offset from the spokedeg to get them out of the way of the
+	// detail dimensions for cutting the webs.
+	
+	// Inner hole distance
+	drawRadialDim(context, offsetx, offsety, fly.spokedeg + 10,
+			0, fly.innerHoleDistance*fscale,
+			fly.innerHoleDistance.toFixed(3), 0.75,
+			"black", pattern_solid);
+	
+	// Outer hole distance
+	drawRadialDim(context, offsetx, offsety, fly.spokedeg + 22.5,
+			0, fly.outerHoleDistance*fscale,
+			fly.outerHoleDistance.toFixed(3), 0.75,
+			"black", pattern_solid);
+	
+	// Rim radius
+	drawRadialDim(context, offsetx, offsety, fly.spokedeg + 32.5,
+			0, fly.rimRadius*fscale,
+			fly.rimRadius.toFixed(3), 0.75,
+			"black", pattern_solid);
+	// Rim thickness
+	var rim = fly.flywheelRadius - fly.rimRadius;
+	drawRadialDim(context, offsetx, offsety, fly.spokedeg + 28,
+			fly.rimRadius*fscale, fly.flywheelRadius*fscale,
+			rim.toFixed(3), 0.50,
+			"black", pattern_solid);
+
+	// Flywheel Radius dimension (do we need diameter?)
+	drawRadialDim(context, offsetx, offsety, fly.spokedeg + 40,
+			0, fly.flywheelRadius*fscale,
+			fly.flywheelRadius.toFixed(3), 0.70,
+			"black", pattern_solid);
+	
+	// Hub Radius dimension is only useful as feedback from settings.
+	// I place it as the last dimension and push out the label since I
+	// know space is always going to be tight for the dimension to fit.
+	drawRadialDim(context, offsetx, offsety, fly.spokedeg + 75,
+			0, fly.hubRadius*fscale,
+			fly.hubRadius.toFixed(3), 0.80,
+			"black", pattern_solid);
+
+	// Outer hole angle.  Draw this in the first web cutout.
+	drawAngDim(context,
+		offsetx, offsety, 0, si0.leftOuterAngle,
+		fradius * 0.88,
+		si0.leftOuterAngle.toFixed(1) + "°", 0.98,
+		"black", pattern_solid);
+	
+	if (si0.rightOuterAngle > si0.leftOuterAngle) {  // should always be true
+		drawAngDim(context,
+			offsetx, offsety, 0, si0.rightOuterAngle,
+			fradius * 0.95,
+			si0.rightOuterAngle.toFixed(1) + "°", 0.98,
+			"black", pattern_solid);
+	}
+	
+	// Inner hole angle.  Draw this in the first web cutout.
+	drawAngDim(context,
+		offsetx, offsety, 0, si0.leftInnerAngle,
+		fradius * 0.50,
+		si0.leftInnerAngle.toFixed(1) + "°", 0.98,
+		"black", pattern_solid);
+	
+	if (si0.rightInnerAngle > si0.leftInnerAngle) {
+		// Second Inner hole angle.  Draw this in the first web cutout.
+		drawAngDim(context,
+			offsetx, offsety, 0, si0.rightInnerAngle,
+			fradius * 0.57,
+			si0.rightInnerAngle.toFixed(1) + "°", 0.98,
+			"black", pattern_solid);
+	}	
+
+
+	// Flywheel spoke angle.  Draw this in the last web cutout.
+	drawAngDim(context,
+		offsetx, offsety, -fly.spokedeg, 0,
+		fradius * 0.91,
+		fly.spokedeg.toFixed(1) + "°", 0.98,
+		"black", pattern_solid);
+
+	// Add degree marks for each spoke.  Get this out of spkinfo
+	// even though it's easy to calculate.
+	context.save();
+	var spk;
+	for (spk=0; spk < fly.spokes; spk++) {
+		var si = fly.spkinfo[spk];
+		var label = si.angle.toFixed(1) + "°";
+		var textwidth = context.measureText(label).width;
+		var dest = rotate(toPoint(0, fradius * 1.07), si.angle);
+		context.fillText(label, offsetx+dest.x - textwidth/2, offsety-dest.y);
+	}
+	context.restore();
+
 }
 
 </script>
