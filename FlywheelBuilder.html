@@ -4,17 +4,35 @@
 <title>Flywheel Builder</title>
 <!-- Copyright (C) 2015 Todd Inglett -->
 <!-- License GPLv2.  See https://gnu.org/licenses/old-licenses/gpl-2.0.txt -->
+<!--
+For now, see the discussion at http://www.modelenginemaker.com/index.php/topic,5078.0.html
+for some background and instructions on using this application.
+
+This is fairly new and not well tested.  Double check everything and certainly
+verify cuts look correct as you setup your mill.  Instructions for safely
+using a mill and lathe are not covered here.  If you are just starting out,
+try asking questions of all the fine and helpful people you will find at
+http://www.modelenginemaker.com and you won't be disappointed!
+
+Todd
+ -->
+<style>
+table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+</style>
 </head>
 
 <body onLoad="buildFlywheels()">
-<h2>Flywheel builder v1.1</h2>
+<h2>Flywheel builder v1.2</h2>
 <form name="flywheelParms" onChange="buildFlywheels()">
 <!-- Use a select for spokes so crazy numbers (like fractions) can't happen -->
-<canvas id="flywheelDemoCanvas" width="500" height="500"
+<canvas id="flywheelDemoCanvas" width="400" height="400"
   style="border:1px solid #d3d3d3;">
 Your browser does not support the canvas element.  Sorry, this web page won't work for you.
 </canvas>
-<canvas id="flywheelDimsCanvas" width="500" height="500"
+<canvas id="flywheelDimsCanvas" width="400" height="400"
   style="border:1px solid #d3d3d3;">
 </canvas>
 <p><b>Dimensions:   </b>
@@ -23,10 +41,16 @@ Spokes: <select id="flywheelSpokes">
 		<option value="4">4</option>
 		<option value="5" selected>5</option>
 		<option value="6">6</option>
-		<option value="7">7</option>
-		<option value="8">8</option>
 		</select>
-<table>
+Units: <select id="flywheelUnits">
+		<option value="mm">mm</option>
+		<option value="in" selected>inches</option>
+		</select>
+		
+<input id="prevFlywheelSpokes" value="0" hidden>
+<input id="prevFlywheelUnits" value="none" hidden>
+
+<table style="text-align: left">
 <tr><td>Flywheel diameter </td> <td><input id="flywheelDiameter" type="text" value="4.000" size="4" maxlength="8"></td>
     <td>Rim Thickness </td> <td><input id="flywheelRimThick" type="text" value="0.312" size="4" maxlength="8"></td></tr>
 <tr><td>Hub diameter     </td> <td><input id="flywheelHubDiameter" type="text" value="0.625" size="4" maxlength="8"></td>
@@ -38,22 +62,199 @@ Spokes: <select id="flywheelSpokes">
 <tr><td>Inner hole angle</td> <td><input id="flywheelInnerHoleAngle" type="text" value="36.0" size="4" maxlength="8"></td>
     <td>Outer hole angle</td> <td><input id="flywheelOuterHoleAngle" type="text" value="8.0" size="4" maxlength="8"></td></tr>
 </table>
-
-<p><b>Note:</b> Length units do not matter as long as dimensions are consistent.  Angles are in degrees.
 </form>
 
 <p>
-The <b id="NumSpokes"></b> spoke angles are <b id="SpokeAngles"></b>.
 The inner spoke thickness is <b id="InnerThick">0</b> and the outer spoke
 thickness is <b id="OuterThick">0</b>.  Use an inner hole angle of <b id="ThreeHoleAngle"></b> to have a 3-hole web cutout.
 <p>
-The rotary table must be rotated <b id="RTrotate">0</b> degrees to bring the
-spoke edge parallel to the mill y axis.  The table must be offset by
-x=<b id="RToffset">0</b> plus half the cutter diameter.
+The rotary table must be rotated <b id="RTrotate">0</b> degrees clockwise to bring the
+spoke edge parallel to the mill axis.  The table must be offset by
+x=<b id="RToffset">0</b> plus half the cutter diameter.  See the step-by-step
+instructions below to build this particular flywheel design.
+
+<h1>Fabrication of this Flywheel</h1>
+This generated guide provides instructions for cutting out the web in the flywheel design shown above.
+This guide does not cover details of the Z dimension.  It is expected the flywheel will initially be
+turned on the lathe.  Face the flywheel on both sides.  Bore the axle hole, which could be smaller
+than the final hole if the flywheel must be fitted to a mandrel or fitted for a guide for centering on the rotary
+table (RT).  Trepan the flywheel.  i.e., turn the webs in preparation for the cutout procedure below.
+The flywheel can return to the lathe after performing the web cutouts if desired.
+
+<h2>Orientation</h2>
+Note that the angles for the flywheel are dimensioned such that 0 degrees is pointing "up."  When the flywheel
+is centered on an RT on the mill, this "up" direction could be aligned with either the Y axis or the X axis.  Which
+axis is used does really matter, so the instructions from here on will be vague about this.  There may be a
+slight advantage to using X as cutting operation may be easier to see.
+<p>
+In these instructions spokes are numbered from 1, which is the spoke facing "up," and they go around in a clockwise
+direction.  In general the web cutouts will be performed in a clockwise direction for this reason.  If for some reason
+your rotary table works better counterclockwise, there is no reason that can't be done.  Just be consistent to avoid
+backlash and, more importantly, confusion.
+<p>
+Here are the spoke angles for this particular flywheel design.  Cuts will not be performed directly along these angles
+as these identify the centerlines of the spokes, but it should be noted that often moving from one position to another
+will span this angle increment.  <b>Hint:</b> the angles are greatly simplified if they are a multiple of the turn
+of a crank on the RT.  This may be something like 4 degrees.  The design of the flywheel can usually be tweaked so
+this is the case, and working the RT becomes much easier.
+<p>
+Finally, note that degrees are shown rounded to tenths.  A tenth of a degree is 6 minutes, 0 seconds.  This
+should be accurate enough for flywheel web cutouts.
+
+<table id="spokeTable"  style="text-align: right; width: 10em;">
+<caption><b>Table 1: Spoke angles</b></caption>
+<tr><th>Spoke</th><th>Angle</th></tr>
+</table>
+
+<h2>Order of Operations</h2>
+There are many ways to cut out the webs of the flywheel, but this ordering works well and is what will be described here.
+As mentioned earlier, it is assumed the flywheel has been faced and trepanned on the lathe, and a center bore has been
+made, whether sized for the final axle or not, so that the flywheel webs can be cut.  The center hole will be the key datum
+from which measurements will be made.
+<ol>
+<li>Drill the leftmost inner holes for the cutouts.
+<li>Drill the rightmost inner holes for the cutouts (if there are any -- 3-hole cutouts are common).
+<li>Drill the leftmost outer holes for the web cutouts.
+<li>Drill the rightmost outer holes for the web cutouts.
+<li>Cut the right (clockwise) side of each spoke.
+<li>Cut the left side of each spoke.
+<li>Cut the outer arc of the web cutout.
+<li>Cut the inner arc if it is a 4-hole cutout.
+</ol>
+
+<h2>Setup</h2>
+Center and clamp the flywheel on the RT.  The clamps must not obstruct drilling and cutting operations.
+Center the RT under the mill.  Zero the RT and mark the flywheel so it is obvious where the 0 (spoke #1) is located.
+Many operations will reset to this position as their first step.
+
+<h2>Drill the Inner Holes</h2>
+The inner holes for this flywheel design are <b id="inTabDia">0</b> diameter.  These holes will be drilled
+at an offset <b id="inTabDist">0</b> from the center of the flywheel by
+shifting the center of the rotary table in X or Y.  <span id="inTab4holeMsg"></span>
+Advancing from hole to hole in this manner is done by rotating the RT <b id="instRTspokeAngle1">0</b> degrees for each.
+Return the RT back to 0 degrees when done.
+<p>
+<table id="innerHoleTable" style="text-align: right; width: 12em;">
+<caption><b>Table 2: Inner hole angles</b></caption>
+<tr><th>Spoke</th><th colspan="2">Angle</th></tr>
+</table>
+
+<h2>Drill the Outer Holes</h2>
+The outer holes are <b id="outTabDia">0</b> diameter.  These holes will be drilled
+at an offset <b id="outTabDist">0</b> from the center of the flywheel by
+shifting the center of the rotary table in X or Y.  Use care to reset the distance from the center
+as the RT was offset for the previous drilling of inner holes.  It may be best to re-center the RT
+and adjust the offset from there to avoid error.
+<p>
+There are two holes to drill on the clockwise side of each spoke.
+The angles are listed. It is less error prone to drill the left hole for each spoke first, and then go around again drilling the right.
+Advancing from hole to hole in this manner is done by rotating the RT <b id="instRTspokeAngle2">0</b> degrees for each.
+Return the RT back to 0 degrees when done.
+<p>
+<table id="outerHoleTable"  style="text-align: right; width: 12em;">
+<caption><b>Table 3: Outer hole angles</b></caption>
+<tr><th>Spoke</th><th colspan="2">Angle</th></tr>
+</table>
+
+<h2>The Spoke Cutting</h2>
+At the point the "corners" of the web cutouts have been defined with drilled holes.
+Now the sides of the web cutouts along the spoke edges will be milled.  For best results,
+use an end mill equal to or smaller than the smallest hole diameter.  The mill will cut from
+an inner hole to the corresponding outer hole.
+<p>
+To position for this cut, start with spoke number 1 by ensuring the RT is centered
+on the mill and returned to the zero position.  See the figure below for <b>Step 1</b>.
+Now rotate the RT exactly
+<b id="instRTrotate">0</b> degrees clockwise, which is a setting specific to this particular
+flywheel design.  See the figure below for this clockwise rotation for <b>Step 2</b>.
+The cut on the left side of the end mill should now be in
+line to make this cut, except that the X or Y needs to be offset
+by <b id="instRToffset">0</b> to account for the spoke thickness.
+See the figure below for this sideways shift in <b>Step 3</b>.
+Again, this
+offset is specific to this flywheel design.  This offset must be further
+increased by half the diameter (radius) of the end mill being used to cut the
+spoke.  See the figure below for the end mill radius shift in <b>Step 4</b>.
+<b>Don't forget to account for the cutter diameter!</b>
+<p>
+Before cutting, lower the mill head without plunging into either hole and verify
+the cutter will cut from the left side of the inner hole to the left side of the
+outer hole.  If all looks good, note the current Y (or X) position and slightly
+increase the distance.  Now the cut can be made, potentially in multiple depth
+passes depending on the capability of the mill.  Once it is completely cut
+through, reset Y (or X) and make the final finish pass at the exact offset.
+<p>
+This cut the right side of spoke number 1.  Now use the RT to rotate past spoke
+number 2 and do the same cut to the right of that spoke.  This will be a simple
+<b id="instRTspokeAngle3">0</b> rotation from the current cut for this flywheel
+design.  Don't change other settings, except jog the Y (or X) for the rough
+cut vs. the finish cut.  Repeat until all the right sides of the spokes are cut.
+<p>
+<div style="float:left;">
+<canvas id="instSpokeStep1Canvas" width="200" height="200"
+  style="border:1px solid #d3d3d3;">
+</canvas>
+<br><b>Step 1: initial setup</b>
+</div>
+<div style="float:left;">
+<canvas id="instSpokeStep2Canvas" width="200" height="200"
+  style="border:1px solid #d3d3d3;">
+</canvas>
+<br><b>Step 2: rotate for cut</b>
+</div>
+<div style="float:left;">
+<canvas id="instSpokeStep3Canvas" width="200" height="200"
+  style="border:1px solid #d3d3d3;">
+</canvas>
+<br><b>Step 3: shift sideways</b>
+</div>
+<div style="float:left;">
+<canvas id="instSpokeStep4Canvas" width="200" height="200"
+  style="border:1px solid #d3d3d3;">
+</canvas>
+<br><b>Step 4: adjust for endmill</b>
+</div>
+<br style="clear: both">
+<p>
+Now the left side of each spoke must be cut.  <b>Return the RT back to zero.</b>
+Now back up the RT by advancing clockwise <b id="instRTrotateLeft">0</b> degrees.
+Now the right side of the end mill should be
+in line to make this cut, except that the X or Y needs to be offset the other way
+by <b id="instRToffsetBack">0</b> to account for the spoke thickness.  And again,
+account for the end mill diameter by adjusting further for half the cutter diameter.
+<p>
+As before, lower the mill head without plunging into either hole and verify
+the cutter will cut from the right side of the inner hole to the right side of the
+outer hole.  If all looks good, note the current Y (or X) position and slightly
+increase the distance.  Now the cut can be made, potentially in multiple depth
+passes depending on the capability of the mill.  Once it is completely cut
+through, reset Y (or X) and make the final finish pass at the exact offset.
+Repeat until all the left sides of the spokes are cut.
+<p>
+The difficult part is done!
+
+<h2>Finishing the Web</h2>
+<span id="instFinish4WebMsg"></span>
+<p>
+Finish by cutting the outer arc.  Return the RT so that it and the flywheel
+are centered under the mill. The outer arc of the web is at
+<b id="instOuterArc">0</b> from the flywheel center.
+This is the outer hole center distance of <b id="instOuterDist">0</b> plus
+the radius of the outer hole which is  <b id="instOuterRadius">0</b>.
+Offset X (or Y) by this amount, but reduced to account
+for the end mill radius. Make the cut for each web being very careful NOT
+to cut through a spoke!
+<p>
+That's it.  The flywheel may be removed from the
+RT and cleaned up with files or further lathe operations.
+
 <script>
 "use strict";
 
-var DEGSYM = "\u00B0"; // degree symbol in UTF-8 (unicode)
+var DEGSYM = "\u00B0";	// degree symbol in UTF-8 (unicode)
+var units = "unknown";	// will be inches or mm
+var angdigits = 1;		// Fixed at 1 decimal places for angles.
+var lendigits = 0;		// will be 3 for inches and 2 for mm
 
 /*
  * Build all the flywheel pictures here.
@@ -62,6 +263,50 @@ var DEGSYM = "\u00B0"; // degree symbol in UTF-8 (unicode)
  * This will (help) keep all the data consistent between views.
  */
 function buildFlywheels() {
+	
+	// Before calculating and drawing the flywheel, do some measurement
+	// handling (mm vs. inches).  This may not be the best thing to do, but if
+	// the units is changed we automatically convert the units in the form.
+	// Angles are always degrees, but length can be mm or inches.
+	// The units and lendigits are global vars for now.
+	var prevunits = document.getElementById("prevFlywheelUnits").value;
+	units = document.getElementById("flywheelUnits").value;
+	if (units == "mm")
+		lendigits = 2;
+	else if (units == "in")
+		lendigits = 3;
+	// Now that we have rounding established, do conversions if needed.
+	if (prevunits != units) {
+		var conv = 0;
+		if (prevunits == "mm")
+			conv = 1/25.4;
+		else if (prevunits == "in")
+			conv = 25.4;		// if neither, we get zero
+		if (conv != 0) {
+			// These are length fields to convert. Keeping this list is error prone.
+			var fields = [
+				"flywheelDiameter",
+				"flywheelRimThick",
+				"flywheelHubDiameter",
+				"flywheelShaftDiameter",
+				"flywheelInnerHoleDiameter",
+				"flywheelInnerHoleDistance",
+				"flywheelOuterHoleDiameter",
+				"flywheelOuterHoleDistance"
+			];
+			var f;
+			for (f in fields) {
+				var v = document.getElementById(fields[f]).value;
+				v = v * conv;
+				document.getElementById(fields[f]).value = v.toFixed(lendigits);
+			}
+		}
+	}
+	document.getElementById("prevFlywheelUnits").value = units;
+
+	//
+	// Now calculate the flywheel from all the values in the form.
+	//
 	var spokes = parseInt(document.getElementById("flywheelSpokes").value);
 	var flydia = parseFloat(document.getElementById("flywheelDiameter").value);
 	var rim = parseFloat(document.getElementById("flywheelRimThick").value);
@@ -76,6 +321,22 @@ function buildFlywheels() {
 	var outholedist = parseFloat(document.getElementById("flywheelOuterHoleDistance").value);
 	var outholeang = parseFloat(document.getElementById("flywheelOuterHoleAngle").value);
 	
+	// Some checks to "fix" invalid flywheels.  This doesn't cover them
+	// all, by any means!
+	var prevspokes = document.getElementById("prevFlywheelSpokes").value;
+	if (prevspokes != spokes) {
+		// If the previous # spokes had a 3-hole cutout then keep it that way.
+		if (inholeang == 180/prevspokes) {
+			inholeang = 180/spokes;
+			document.getElementById("flywheelInnerHoleAngle").value = inholeang.toFixed(angdigits);
+		}
+	}
+	document.getElementById("prevFlywheelSpokes").value = spokes;
+	if (inholeang > 180/spokes) {
+		inholeang = 180/spokes;
+		document.getElementById("flywheelInnerHoleAngle").value = inholeang.toFixed(angdigits);
+	}	
+	
 	var fly = calculateFlywheel(
 			spokes,					// number of spokes
 			flydia/2,				// radius of flywheel
@@ -89,37 +350,41 @@ function buildFlywheels() {
 			outholeang,				// angle of outer cut hole
 			outholedist);			// distance to center of outer hole
 	
+	//
+	// Finally draw it, and draw it again with dimension markup.
+	//
 	var canvas = document.getElementById("flywheelDemoCanvas");
 	drawFlywheelDemo(canvas, fly);
 	var canvasdims = document.getElementById("flywheelDimsCanvas");
 	drawFlywheelDemo(canvasdims, fly);
 	drawFlywheelDims(canvasdims, fly);
 
+	//
+	// Now do a pile of document fixups to personalize the web page
+	// instructions to the flywheel design
+	//
 	var RTrotate = document.getElementById("RTrotate");
 	var RToffset = document.getElementById("RToffset");
 	var si = fly.spkinfo[0];
 	var cutangle = 360 - si.leftCutAngle;
 	var cuts = rotate(si.leftCutEdgeStart, cutangle);
-	RTrotate.innerHTML = cutangle.toFixed(2);
-	RToffset.innerHTML = cuts.x.toFixed(3);
-	
-	var NumSpokes = document.getElementById("NumSpokes");
-	NumSpokes.innerHTML = spokes;
-	var SpokeAngles = document.getElementById("SpokeAngles");
-	var sangle = 360 / spokes;
-	var sangles = "0";
-	var fixeddigits = 0;
-	if (spokes == 7) {
-		fixeddigits = 2;	// hackish.  Only 7 spoke has an issue here
-	}
-	for (var ang = sangle; ang < 360; ang += sangle) {
-		sangles += ", " + ang.toFixed(fixeddigits);
-	}
-	SpokeAngles.innerHTML = sangles;
-	
+	RTrotate.innerHTML = cutangle.toFixed(angdigits);
+	RToffset.innerHTML = cuts.x.toFixed(lendigits);
+	// More instruction customization:
+	document.getElementById("instRTrotate").innerHTML = cutangle.toFixed(angdigits);
+	document.getElementById("instRTrotateLeft").innerHTML = (360 - cutangle).toFixed(angdigits);
+	document.getElementById("instRToffset").innerHTML = cuts.x.toFixed(lendigits);
+	document.getElementById("instRToffsetBack").innerHTML = cuts.x.toFixed(lendigits);
+	document.getElementById("instOuterArc").innerHTML = (fly.outerHoleDistance + fly.outerHoleRadius).toFixed(lendigits);
+	document.getElementById("instOuterDist").innerHTML = fly.outerHoleDistance.toFixed(lendigits);
+	document.getElementById("instOuterRadius").innerHTML = fly.outerHoleRadius.toFixed(lendigits);
+	document.getElementById("instRTspokeAngle1").innerHTML = fly.spokedeg.toFixed(angdigits);
+	document.getElementById("instRTspokeAngle2").innerHTML = fly.spokedeg.toFixed(angdigits);
+	document.getElementById("instRTspokeAngle3").innerHTML = fly.spokedeg.toFixed(angdigits);
+
 	var ThreeHoleAngle = document.getElementById("ThreeHoleAngle");
-	var angle3hole = sangle/2;
-	ThreeHoleAngle.innerHTML = angle3hole.toFixed(2);
+	var angle3hole = fly.spokedeg/2;
+	ThreeHoleAngle.innerHTML = angle3hole.toFixed(angdigits);
 	
 	// Calculate thickness of spoke at inner and outer holes.
 	// This is easy with spoke zero because Y is fixed.  That is, they
@@ -129,8 +394,106 @@ function buildFlywheels() {
 	var OuterThick = document.getElementById("OuterThick");
 	var innerSpokeThickness = (si.leftInnerCenter.x - fly.innerHoleRadius)*2;
 	var outerSpokeThickness = (si.leftOuterCenter.x - fly.outerHoleRadius)*2;
-	InnerThick.innerHTML = innerSpokeThickness.toFixed(3);
-	OuterThick.innerHTML = outerSpokeThickness.toFixed(3);
+	InnerThick.innerHTML = innerSpokeThickness.toFixed(lendigits);
+	OuterThick.innerHTML = outerSpokeThickness.toFixed(lendigits);
+	
+	//
+	// Now update cutting schedule tables.
+	// Each has a single row heading, so we delete the extra rows
+	// and generate new ones.  Table row indexes start at 0 (the heading).
+	//
+	var table;
+	
+	// The spokeTable.  This is just a list of the primary spoke
+	// angles and is more of a reference than anything.
+	table = document.getElementById("spokeTable");
+	// clear table (leave heading row 0)
+	while (table.rows.length > 1)
+			table.deleteRow(-1);	// delete last row
+	for (var spk=0; spk < spokes; spk++) {
+		var row = table.insertRow(-1);	// append row
+		var spkcell = row.insertCell(0);
+		var spkang = row.insertCell(1);
+		spkcell.innerHTML = spk+1;   // number from 1
+		spkang.innerHTML = fly.spkinfo[spk].angle.toFixed(angdigits);
+	}
+	
+	// The inner hole cutout table.  If the left/right inner holes are
+	// identical (typical -- 3 hole cutout), then we show only one reading
+	// per spoke, of course.
+	table = document.getElementById("innerHoleTable");
+	// clear table (leave heading row 0)
+	while (table.rows.length > 1)
+			table.deleteRow(-1);	// delete last row
+	for (var spk=0; spk < spokes; spk++) {
+		// Always insert the left hole.
+		var row = table.insertRow(-1);	// append row
+		var spkcell = row.insertCell(0);
+		var spkang = row.insertCell(1);
+		spkcell.innerHTML = spk+1;   // number from 1
+		spkang.innerHTML = fly.spkinfo[spk].leftInnerAngle.toFixed(angdigits);
+		if (fly.spkinfo[spk].rightInnerAngle !=
+			fly.spkinfo[spk].leftInnerAngle) {
+			// show right angle also.  Don't include the spoke # (blank)
+			spkang = row.insertCell(2);
+			spkang.innerHTML = fly.spkinfo[spk].rightInnerAngle.toFixed(angdigits);
+		}
+	}
+	// Update the message under the table with actual dimensions.
+	document.getElementById("inTabDia").innerHTML = (fly.innerHoleRadius*2).toFixed(lendigits);
+	document.getElementById("inTabDist").innerHTML = fly.innerHoleDistance.toFixed(lendigits);
+	if (fly.spkinfo[0].rightInnerAngle == fly.spkinfo[0].leftInnerAngle) {
+			document.getElementById("inTab4holeMsg").innerHTML =
+			"This is a 3-hole web cutout, so there is only one hole to " +
+			"drill on the clockwise side of each spoke.  " + 
+			"The angle is listed for each spoke.";
+			document.getElementById("instFinish4WebMsg").innerHTML =
+			"This is a 3-hole web cutout, so only the outer arc of the web" +
+			" needs to be cut for each web.";
+	} else {
+			document.getElementById("inTab4holeMsg").innerHTML =
+			"This is a 4-hole web cutout, so there are two holes to drill " +
+			"on the clockwise side of each spoke.  The angles are listed. " +
+			"It is less error prone to drill the left hole for each " +
+			"spoke first, and then go around again drilling the right.";
+			document.getElementById("instFinish4WebMsg").innerHTML =
+			"This is a 4-hole web cutout, so the inner arc of the web" +
+			" needs to be cut.  Return the RT so that it and the flywheel" +
+			" are centered under the mill.  The inner arc is at " +
+			(fly.innerHoleDistance - fly.innerHoleRadius).toFixed(lendigits) +
+			".  This is the inner hole center distance of " +
+			fly.innerHoleDistance.toFixed(lendigits) +
+			" less the radius of the inner hole which is " + 
+			fly.innerHoleRadius.toFixed(lendigits) +
+			".  Offset X (or Y) by this amount as well as an additional" +
+			" distance to account for the end mill radius.  Make the cut" +
+			" for each web being very careful NOT to cut through a spoke!";
+	}
+	
+	// The outer hole cutout table.  
+	table = document.getElementById("outerHoleTable");
+	// clear table (leave heading row 0)
+	while (table.rows.length > 1)
+			table.deleteRow(-1);	// delete last row
+	for (var spk=0; spk < spokes; spk++) {
+		var row = table.insertRow(-1);	// append row
+		var spkcell = row.insertCell(0);
+		var spkang1 = row.insertCell(1);
+		var spkang2 = row.insertCell(2);
+
+		spkcell.innerHTML = spk+1;   // number from 1
+		spkang1.innerHTML = fly.spkinfo[spk].leftOuterAngle.toFixed(angdigits);
+		spkang2.innerHTML = fly.spkinfo[spk].rightOuterAngle.toFixed(angdigits);
+	}
+	// Update the message under the table with actual dimensions.
+	document.getElementById("outTabDia").innerHTML = (fly.outerHoleRadius*2).toFixed(lendigits);
+	document.getElementById("outTabDist").innerHTML = fly.outerHoleDistance.toFixed(lendigits);
+	
+	// Now fill in the instSpokeStep*Canvas figures
+	drawSpokeStep(1, document.getElementById("instSpokeStep1Canvas"), fly);
+	drawSpokeStep(2, document.getElementById("instSpokeStep2Canvas"), fly);
+	drawSpokeStep(3, document.getElementById("instSpokeStep3Canvas"), fly);
+	drawSpokeStep(4, document.getElementById("instSpokeStep4Canvas"), fly);
 
 }
 
@@ -450,6 +813,7 @@ function calculateFlywheel(
 		spkinfo: []		// Array of info per spoke filled in below.
 	};
 	
+
 	// Fill in spkinfo
 	// Inner and outer circle center coords go here.
 	var spk;
@@ -690,6 +1054,37 @@ function drawFlywheelDims(canvas, fly) {
 	context.globalAlpha="0.65";
 	context.fillRect(0,0,canvas.width,canvas.height);
 	context.restore();
+	
+	// Draw the web cutout holes.
+	// There can be 4 holes, but usually the inner holes are aligned so
+	// there are really only 3 holes.  We draw all 4 here because it makes
+	// little difference to draw the same inner circle twice.
+	drawCircle(context,
+				offsetx + si0.leftInnerCenter.x*fscale,
+				offsety - si0.leftInnerCenter.y*fscale, // Y goes down in canvas
+				fly.innerHoleRadius*fscale,
+				"black", fill_none, pattern_solid);
+	drawCircle(context,
+				offsetx + si0.rightInnerCenter.x*fscale,
+				offsety - si0.rightInnerCenter.y*fscale, // Y goes down in canvas
+				fly.innerHoleRadius*fscale,
+				"black", fill_none, pattern_solid);
+	drawCircle(context,
+				offsetx + si0.leftOuterCenter.x*fscale,
+				offsety - si0.leftOuterCenter.y*fscale, // Y goes down in canvas
+				fly.outerHoleRadius*fscale,
+				"black", fill_none, pattern_solid);
+	drawCircle(context,
+				offsetx + si0.rightOuterCenter.x*fscale,
+				offsety - si0.rightOuterCenter.y*fscale, // Y goes down in canvas
+				fly.outerHoleRadius*fscale,
+				"black", fill_none, pattern_solid);
+	// Redraw the hole distance lines in black, but keep them dotted
+	drawCircle(context, offsetx, offsety, fly.innerHoleDistance*fscale,
+				"black", fill_none, pattern_dot);
+	drawCircle(context, offsetx, offsety, fly.outerHoleDistance*fscale,
+				"black", fill_none, pattern_dot);
+
 
 	// Radial dimensions from the center of the flywheel.
 	// These are offset from the spokedeg to get them out of the way of the
@@ -698,31 +1093,31 @@ function drawFlywheelDims(canvas, fly) {
 	// Inner hole distance
 	drawRadialDim(context, offsetx, offsety, fly.spokedeg + 10,
 			0, fly.innerHoleDistance*fscale,
-			fly.innerHoleDistance.toFixed(3), 0.75,
+			fly.innerHoleDistance.toFixed(lendigits), 0.75,
 			"black", pattern_solid);
 	
 	// Outer hole distance
 	drawRadialDim(context, offsetx, offsety, fly.spokedeg + 22.5,
 			0, fly.outerHoleDistance*fscale,
-			fly.outerHoleDistance.toFixed(3), 0.75,
+			fly.outerHoleDistance.toFixed(lendigits), 0.75,
 			"black", pattern_solid);
 	
 	// Rim radius
 	drawRadialDim(context, offsetx, offsety, fly.spokedeg + 32.5,
 			0, fly.rimRadius*fscale,
-			fly.rimRadius.toFixed(3), 0.75,
+			fly.rimRadius.toFixed(lendigits), 0.75,
 			"black", pattern_solid);
 	// Rim thickness
 	var rim = fly.flywheelRadius - fly.rimRadius;
 	drawRadialDim(context, offsetx, offsety, fly.spokedeg + 28,
 			fly.rimRadius*fscale, fly.flywheelRadius*fscale,
-			rim.toFixed(3), 0.50,
+			rim.toFixed(lendigits), 0.50,
 			"black", pattern_solid);
 
 	// Flywheel Radius dimension (do we need diameter?)
 	drawRadialDim(context, offsetx, offsety, fly.spokedeg + 40,
 			0, fly.flywheelRadius*fscale,
-			fly.flywheelRadius.toFixed(3), 0.70,
+			fly.flywheelRadius.toFixed(lendigits), 0.70,
 			"black", pattern_solid);
 	
 	// Hub Radius dimension is only useful as feedback from settings.
@@ -730,21 +1125,21 @@ function drawFlywheelDims(canvas, fly) {
 	// know space is always going to be tight for the dimension to fit.
 	drawRadialDim(context, offsetx, offsety, fly.spokedeg + 75,
 			0, fly.hubRadius*fscale,
-			fly.hubRadius.toFixed(3), 0.80,
+			fly.hubRadius.toFixed(lendigits), 0.80,
 			"black", pattern_solid);
 
 	// Outer hole angle.  Draw this in the first web cutout.
 	drawAngDim(context,
 		offsetx, offsety, 0, si0.leftOuterAngle,
 		fradius * 0.88,
-		si0.leftOuterAngle.toFixed(1) + DEGSYM, 0.98,
+		si0.leftOuterAngle.toFixed(angdigits) + DEGSYM, 0.98,
 		"black", pattern_solid);
 	
 	if (si0.rightOuterAngle > si0.leftOuterAngle) {  // should always be true
 		drawAngDim(context,
 			offsetx, offsety, 0, si0.rightOuterAngle,
 			fradius * 0.95,
-			si0.rightOuterAngle.toFixed(1) + DEGSYM, 0.98,
+			si0.rightOuterAngle.toFixed(angdigits) + DEGSYM, 0.98,
 			"black", pattern_solid);
 	}
 	
@@ -752,7 +1147,7 @@ function drawFlywheelDims(canvas, fly) {
 	drawAngDim(context,
 		offsetx, offsety, 0, si0.leftInnerAngle,
 		fradius * 0.50,
-		si0.leftInnerAngle.toFixed(1) + DEGSYM, 0.98,
+		si0.leftInnerAngle.toFixed(angdigits) + DEGSYM, 0.98,
 		"black", pattern_solid);
 	
 	if (si0.rightInnerAngle > si0.leftInnerAngle) {
@@ -760,7 +1155,7 @@ function drawFlywheelDims(canvas, fly) {
 		drawAngDim(context,
 			offsetx, offsety, 0, si0.rightInnerAngle,
 			fradius * 0.57,
-			si0.rightInnerAngle.toFixed(1) + DEGSYM, 0.98,
+			si0.rightInnerAngle.toFixed(angdigits) + DEGSYM, 0.98,
 			"black", pattern_solid);
 	}	
 
@@ -769,7 +1164,7 @@ function drawFlywheelDims(canvas, fly) {
 	drawAngDim(context,
 		offsetx, offsety, -fly.spokedeg, 0,
 		fradius * 0.91,
-		fly.spokedeg.toFixed(1) + DEGSYM, 0.98,
+		fly.spokedeg.toFixed(angdigits) + DEGSYM, 0.98,
 		"black", pattern_solid);
 
 	// Add degree marks for each spoke.  Get this out of spkinfo
@@ -778,12 +1173,142 @@ function drawFlywheelDims(canvas, fly) {
 	var spk;
 	for (spk=0; spk < fly.spokes; spk++) {
 		var si = fly.spkinfo[spk];
-		var label = si.angle.toFixed(1) + DEGSYM;
+		var label = si.angle.toFixed(angdigits) + DEGSYM;
 		var textwidth = context.measureText(label).width;
 		var dest = rotate(toPoint(0, fradius * 1.07), si.angle);
 		context.fillText(label, offsetx+dest.x - textwidth/2, offsety-dest.y);
 	}
 	context.restore();
+
+}
+
+//
+// Draw the Step N figure for the spoke cutting setup.
+//
+// We draw a very simplified flywheel for this.  The main idea is to show
+// what the setup movements are to avoid any chance of confusion.
+//
+// Step one shows the initial setup.  We have the flywheel centered with
+// spoke 1 "up".  It shows the inner/outer holes and the cut line we are
+// trying to establish.
+//
+function drawSpokeStep(step, canvas, fly) {
+
+	/* Now calculate offsets and a scaling factor so we can draw the
+	 * flywheel the middle of the canvas.  We scale it to 90% of the space
+	 * so that dimension lines can extend beyond the diameter.
+	 */
+	var context = canvas.getContext("2d");
+	var offsetx = canvas.width / 2;
+	var offsety = canvas.height / 2;
+	var fradius =  Math.min(canvas.width, canvas.height) * 0.90 / 2;
+	var fscale = fradius / fly.flywheelRadius;
+	var si0 = fly.spkinfo[0];	// Use spoke 1 (index 0) for example steps
+	var cutangle = 0;
+	var cutshift = 0;
+	
+	if (step > 1)
+		cutangle = 360-si0.leftCutAngle;
+	
+	if (step > 2) {
+		// Calculate cut shift (cuts.x)
+		var cuts = rotate(si0.leftCutEdgeStart, cutangle);
+		cutshift = cuts.x;
+	}
+	
+	if (step > 3) {
+		// Further shift to show endmill radius adjustment
+		cutshift += 3/fscale;
+	}
+	
+	// Assigning to canvas.width will clear it
+	canvas.width = canvas.width;
+	
+	// Draw the circle representing the flywheel
+	drawCircle(context, offsetx, offsety, fly.flywheelRadius*fscale,
+				"black", "lightgray", pattern_solid);
+	drawCircle(context, offsetx, offsety, fly.rimRadius*fscale,
+				"black", "white", pattern_solid);
+	drawCircle(context, offsetx, offsety, fly.hubRadius*fscale,
+				"black", "white", pattern_solid);
+	drawCircle(context, offsetx, offsety, fly.shaftRadius*fscale,
+				"black", "gray", pattern_solid);
+	
+	// Draw the mill's cut line
+	drawLine(context,
+		offsetx+cutshift*fscale, 0, offsetx+cutshift*fscale, canvas.height,
+		"blue", pattern_solid);
+	context.save();
+	// Draw a label saying it is the mill's cut line
+	context.translate(offsetx+cutshift*fscale,offsety);	// Now 0,0 is the center.
+	context.rotate(Math.PI/2);  // turn 90 degrees
+	context.fillStyle = "blue";
+	context.fillText("mill cut line", 20, -2);
+	context.restore();
+
+	// Draw the spoke 0 reference line
+	drawRadialLine(context, offsetx, offsety, si0.angle + cutangle,
+				fly.flywheelRadius*fscale*1.10,   		// scale up 10%
+				"black", pattern_dash_dot_dot);
+
+	// Draw the inner/outer holes.
+	var inctr = rotate(si0.leftInnerCenter, cutangle);
+	var outctr = rotate(si0.leftOuterCenter, cutangle);
+	drawCircle(context,
+				offsetx + inctr.x*fscale,
+				offsety - inctr.y*fscale, // Y goes down in canvas
+				fly.innerHoleRadius*fscale,
+				"black", fill_none, pattern_solid);
+	drawCircle(context,
+				offsetx + outctr.x*fscale,
+				offsety - outctr.y*fscale, // Y goes down in canvas
+				fly.outerHoleRadius*fscale,
+				"black", fill_none, pattern_solid);
+
+	// Now draw the cut line in red
+	// This has already been completely calculated in the spkinfo
+	// but it needs rotation.
+	var start = rotate(si0.leftCutEdgeStart, cutangle);
+	var end = rotate(si0.leftCutEdgeEnd, cutangle);
+	drawLine(context,
+			offsetx + start.x*fscale,
+			offsety - start.y*fscale,
+			offsetx + end.x*fscale,
+			offsety - end.y*fscale,
+			"red", pattern_solid);
+
+	//
+	// Step-specific markings.
+	//
+	if (step == 2) {
+			// Draw rotation arc arrow.  This is not to any scale.
+			var endang = 45;
+			var flip = 1;	// multiplier -- no flip
+			if (cutangle > 180) {
+				endang = 315;  // arc all the way around for emphasis
+				flip = -1;	// used for flipping the sign for the arrow math
+			}
+			context.beginPath();
+			context.arc(offsetx,offsety,fradius*1.07,-Math.PI/2.5,degreesToRadians(endang-90));
+			// We end at 45 degrees.  Make a 45 degree arrowhead which is
+			// easy because it is straight up/down and right/left
+			end = rotate(toPoint(0,fradius*1.07), endang);
+			context.moveTo(offsetx+end.x, offsety-end.y);
+			context.lineTo(offsetx+end.x, offsety-end.y-5*flip);
+			context.moveTo(offsetx+end.x, offsety-end.y);
+			context.lineTo(offsetx+end.x-5, offsety-end.y);
+			context.stroke();
+	}
+	if (step > 2) {
+			// Draw shift arrow.  This is not to any scale.
+			context.beginPath();
+			context.moveTo(canvas.width-10, 20);
+			context.lineTo(canvas.width-40, 20);
+			context.lineTo(canvas.width-36, 16);
+			context.moveTo(canvas.width-40, 20);
+			context.lineTo(canvas.width-36, 24);
+			context.stroke();
+	}
 
 }
 
