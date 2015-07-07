@@ -46,9 +46,20 @@ Units: <select id="flywheelUnits">
 		<option value="mm">mm</option>
 		<option value="in" selected>inches</option>
 		</select>
+Presets:  <select id="flywheelPresets" onchange="selectedPreset()">
+		<option value="">Choose a Pre-designed Flywheel</option>
+		<option value="spokes=5&units=in&dia=4.000&rim=0.312&hub=0.625&shaft=0.313&india=0.375&outdia=0.188&indis=0.625&outdis=1.438&inang=36.0&outang=8.0">
+		4" Diameter 5-spoke Thick</option>
+		<option value="spokes=5&units=in&dia=4.000&rim=0.188&hub=0.625&shaft=0.313&india=0.375&outdia=0.188&indis=0.625&outdis=1.625&inang=36.0&outang=8.0">
+		4" Diameter 5-spoke Thin</option>
+		<option value="spokes=6&units=in&dia=6.5&rim=0.250&hub=0.625&shaft=0.313&india=0.25&outdia=0.188&indis=0.625&outdis=2.75&inang=24&outang=4.6">
+		6.5" Diameter 6-spoke Thin</option>
+
+		</select>
 		
 <input id="prevFlywheelSpokes" value="0" hidden>
 <input id="prevFlywheelUnits" value="none" hidden>
+<input id="urlhash" value="" hidden>
 
 <table style="text-align: left">
 <tr><td>Flywheel diameter </td> <td><input id="flywheelDiameter" type="text" value="4.000" size="4" maxlength="8"></td>
@@ -257,12 +268,118 @@ var angdigits = 1;		// Fixed at 1 decimal places for angles.
 var lendigits = 0;		// will be 3 for inches and 2 for mm
 
 /*
+ * About the URL for FlywheelBuilder:
+ *
+ * The url uses a # sign to include input fields as part of the URL.
+ * As input fields are changed while using this application, note that the
+ * URL get updated to reflect the field changes.  This allows the browser
+ * to bookmark the URL including the input fields.  Therefore different
+ * types of flywheels may be saved.
+ *
+ * To keep the URL short, the input fields are given abbreviations.
+ * These can get rather rough to sound out, but the following table maps
+ * them (and is used by the code).
+ */
+ var urlstatemap = {
+ 	 // map 3-letter abbreviation to HTML form id names.
+ 	 spokes: "flywheelSpokes",
+ 	 units: "flywheelUnits",
+ 	 dia: "flywheelDiameter",
+ 	 rim: "flywheelRimThick",
+ 	 hub: "flywheelHubDiameter",
+ 	 shaft: "flywheelShaftDiameter",
+ 	 india: "flywheelInnerHoleDiameter",
+ 	 outdia: "flywheelOuterHoleDiameter",
+ 	 indis: "flywheelInnerHoleDistance",
+ 	 outdis: "flywheelOuterHoleDistance",
+ 	 inang: "flywheelInnerHoleAngle",
+ 	 outang: "flywheelOuterHoleAngle",
+ };
+ 
+ 
+ /*
+  * This function parses the given location hash.
+  * It uses urlstatemap to translate to HTML form ids, and it will
+  * update the document elements with the values it finds in the
+  * hash (#) part of the URL.
+  *
+  * So far all values are simple so no special quoting is needed.
+  * If someone tries to hand-code a URL, it can easily be mucked up.
+  */
+ function parsehash(hash) {
+ 	 // chop off the # at the start of hash
+ 	 hash = hash.substr(1,hash.length-1);
+  	 console.log("hash="+hash);
+
+ 	 // split the assignments apart
+ 	 var assignments = hash.split("&");
+ 	 for (var i in assignments) {
+ 	 	 // Now assignment[i] is a name=value pair
+ 	 	 var nameval = assignments[i].split("=");
+ 	 	 var field = urlstatemap[nameval[0]];
+ 	 	 if (field == undefined)	// just ignore invalid stuff
+ 	 	 	 continue;
+ 	 	 document.getElementById(field).value = nameval[1];
+ 	 }
+ }
+ 
+ /*
+  * The reverse of parsehash.
+  * This function iterates through urlstatemap and looks up each field
+  * entry using the id name.  It then generates a hash that contains
+  * assignments like this:
+  *   #abc=value&xyz=value&jkl=value
+  *
+  * This string is returned.
+  */
+ function genhash() {
+ 	 var result = "";
+ 	 
+ 	 for (var id in urlstatemap) {
+ 	 	 var field = document.getElementById(urlstatemap[id]);
+ 	 	 if (result == "")
+ 	 	 	 result = "#";	// just starting
+ 	 	 else
+ 	 	 	 result += "&";	// another field
+ 	 	 result += id + "=" + field.value.trim();
+ 	 }
+ 	 return result;
+ }
+ 
+ /*
+  * Handle a preset selection.
+  *
+  * This is incredibly easy.  The value of the preset selector box is the
+  * hash part of the URL that contains all the parameters.  This makes it
+  * easy to add presets by simply pasting the URL hash from a web browser
+  * into this file, but it also makes this code trivial.
+  *
+  * To "load" the preset we set the current hash and we reset the hidden
+  * urlhash field in the form.  The flywheel will update as a result of the
+  * preset selector change, and buildFlywheels() will load the hash.
+  */
+ function selectedPreset() {
+ 	 location.hash = document.getElementById("flywheelPresets").value;
+ 	 document.getElementById("urlhash").value = "";
+ }
+
+/*
  * Build all the flywheel pictures here.
  *
  * We calculate everything once and then draw multiple views of it.
  * This will (help) keep all the data consistent between views.
  */
 function buildFlywheels() {
+
+	// Handle presets based on the url hash #xxx goop.
+	// See parsehash() and genhash() functions for the format.
+	var urlhash = document.getElementById("urlhash");
+	if (urlhash.value == "") {
+		// This hidden input field is empty so we are on the first load.
+		// Parse out the URL for the # stuff and pre-fill the form.
+		parsehash(location.hash);
+		urlhash.value = location.hash;
+	}
 	
 	// Before calculating and drawing the flywheel, do some measurement
 	// handling (mm vs. inches).  This may not be the best thing to do, but if
@@ -495,6 +612,9 @@ function buildFlywheels() {
 	drawSpokeStep(3, document.getElementById("instSpokeStep3Canvas"), fly);
 	drawSpokeStep(4, document.getElementById("instSpokeStep4Canvas"), fly);
 
+	// Now update the # (hash) so the URL matches the inputs
+	// Thus, it can be bookmarked with the current settings.
+	location.hash = genhash();
 }
 
 
