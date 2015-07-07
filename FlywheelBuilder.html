@@ -25,7 +25,7 @@ table, th, td {
 </head>
 
 <body onLoad="buildFlywheels()">
-<h2>Flywheel builder v1.2</h2>
+<h2>Flywheel builder v1.3</h2>
 <form name="flywheelParms" onChange="buildFlywheels()">
 <!-- Use a select for spokes so crazy numbers (like fractions) can't happen -->
 <canvas id="flywheelDemoCanvas" width="400" height="400"
@@ -48,12 +48,21 @@ Units: <select id="flywheelUnits">
 		</select>
 Presets:  <select id="flywheelPresets" onchange="selectedPreset()">
 		<option value="">Choose a Pre-designed Flywheel</option>
-		<option value="spokes=5&units=in&dia=4.000&rim=0.312&hub=0.625&shaft=0.313&india=0.375&outdia=0.188&indis=0.625&outdis=1.438&inang=36.0&outang=8.0">
+		<option value="spokes=6&units=in&dia=2.5&rim=0.25&hub=0.500&shaft=0.250&india=0.250&outdia=0.125&indis=0.438&outdis=0.875&inang=30.0&outang=8.2">
+		2.5" Diameter 6-spoke from Elmers #24 Beam</option>
+		<option value="spokes=4&units=in&dia=3.0&rim=0.375&hub=0.625&shaft=0.250&india=0.250&outdia=0.250&indis=0.438&outdis=1.000&inang=32.0&outang=12.0">
+		3" Diameter 4-spoke Simple</option>
+		<option value="spokes=6&units=in&dia=3.0&rim=0.375&hub=0.500&shaft=0.250&india=0.188&outdia=0.125&indis=0.438&outdis=1.000&inang=30.0&outang=9.0">
+		3" Diameter 6-spoke from Elmer's #5 Geared</option>
+		<option value="spokes=5&units=in&dia=4.0&rim=0.312&hub=0.625&shaft=0.313&india=0.375&outdia=0.188&indis=0.625&outdis=1.438&inang=36.0&outang=8.0">
 		4" Diameter 5-spoke Thick</option>
-		<option value="spokes=5&units=in&dia=4.000&rim=0.188&hub=0.625&shaft=0.313&india=0.375&outdia=0.188&indis=0.625&outdis=1.625&inang=36.0&outang=8.0">
+		<option value="spokes=5&units=in&dia=4.0&rim=0.188&hub=0.625&shaft=0.313&india=0.375&outdia=0.188&indis=0.625&outdis=1.625&inang=36.0&outang=8.0">
 		4" Diameter 5-spoke Thin</option>
+		<option value="spokes=6&units=in&dia=5.0&rim=0.094&hub=0.875&shaft=0.375&india=0.625&outdia=0.188&indis=0.875&outdis=2.125&inang=30.0&outang=6.0">
+		5.0" 6-spoke Easton &amp; Anderson Grasshopper</option>
 		<option value="spokes=6&units=in&dia=6.5&rim=0.250&hub=0.625&shaft=0.313&india=0.25&outdia=0.188&indis=0.625&outdis=2.75&inang=24&outang=4.6">
 		6.5" Diameter 6-spoke Thin</option>
+
 
 		</select>
 		
