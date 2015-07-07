@@ -495,12 +495,15 @@ function buildFlywheels() {
 	var cutangle = 360 - si.leftCutAngle;
 	if (cutangle == 360)
 		cutangle = 0;	// more sane
+	var backangle = 360 - cutangle;
+	if (backangle == 360)
+		backangle = 0;	// more sane
 	var cuts = rotate(si.leftCutEdgeStart, cutangle);
 	RTrotate.innerHTML = cutangle.toFixed(angdigits);
 	RToffset.innerHTML = cuts.x.toFixed(lendigits);
 	// More instruction customization:
 	document.getElementById("instRTrotate").innerHTML = cutangle.toFixed(angdigits);
-	document.getElementById("instRTrotateLeft").innerHTML = (360 - cutangle).toFixed(angdigits);
+	document.getElementById("instRTrotateLeft").innerHTML = backangle.toFixed(angdigits);
 	document.getElementById("instRToffset").innerHTML = cuts.x.toFixed(lendigits);
 	document.getElementById("instRToffsetBack").innerHTML = cuts.x.toFixed(lendigits);
 	document.getElementById("instOuterArc").innerHTML = (fly.outerHoleDistance + fly.outerHoleRadius).toFixed(lendigits);
