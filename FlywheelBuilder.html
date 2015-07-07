@@ -493,6 +493,8 @@ function buildFlywheels() {
 	var RToffset = document.getElementById("RToffset");
 	var si = fly.spkinfo[0];
 	var cutangle = 360 - si.leftCutAngle;
+	if (cutangle == 360)
+		cutangle = 0;	// more sane
 	var cuts = rotate(si.leftCutEdgeStart, cutangle);
 	RTrotate.innerHTML = cutangle.toFixed(angdigits);
 	RToffset.innerHTML = cuts.x.toFixed(lendigits);
@@ -1002,6 +1004,11 @@ function calculateFlywheel(
 		si.rightCutEdgeStart = addPoints(si.rightInnerCenter, rightStart);
 		si.rightCutEdgeEnd = addPoints(si.rightInnerCenter, rightEnd);
 		si.rightCutAngle = angle(si.rightCutEdgeStart, si.rightCutEdgeEnd);
+
+		// Lock the angles in to rounded numbers
+		si.leftCutAngle = si.leftCutAngle.toFixed(angdigits);
+		si.rightCutAngle = si.rightCutAngle.toFixed(angdigits);
+
 		/*
 		console.log("centers (" + si.leftInnerCenter.x + "," + si.leftInnerCenter.y + ") to (" + si.leftOuterCenter.x + "," + si.leftOuterCenter.y + ")");
 		console.log("angle=" + si.leftCutAngle + " cutline (" + si.leftCutEdgeStart.x + "," + si.leftCutEdgeStart.y + ") to (" + si.leftCutEdgeEnd.x + "," + si.leftCutEdgeEnd.y + ")");
@@ -1336,8 +1343,11 @@ function drawSpokeStep(step, canvas, fly) {
 	var cutangle = 0;
 	var cutshift = 0;
 	
-	if (step > 1)
+	if (step > 1) {
 		cutangle = 360-si0.leftCutAngle;
+		if (cutangle == 360)
+			cutangle = 0;	// more sane
+	}
 	
 	if (step > 2) {
 		// Calculate cut shift (cuts.x)
