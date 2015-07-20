@@ -25,7 +25,7 @@ table, th, td {
 </head>
 
 <body onLoad="buildFlywheels()">
-<h2>Flywheel builder v1.4</h2>
+<h2>Flywheel builder v1.5</h2>
 <form name="flywheelParms" onChange="buildFlywheels()">
 <!-- Use a select for spokes so crazy numbers (like fractions) can't happen -->
 <canvas id="flywheelDemoCanvas" width="400" height="400"
@@ -439,7 +439,7 @@ function buildFlywheels() {
 	//
 	// Now calculate the flywheel from all the values in the form.
 	//
-	var spokes = parseInt(document.getElementById("flywheelSpokes").value);
+	var numSpokes = parseInt(document.getElementById("flywheelSpokes").value);
 	var flydia = parseFloat(document.getElementById("flywheelDiameter").value);
 	var rim = parseFloat(document.getElementById("flywheelRimThick").value);
 	var hubdia = parseFloat(document.getElementById("flywheelHubDiameter").value);
@@ -452,25 +452,27 @@ function buildFlywheels() {
 	var outholedia = parseFloat(document.getElementById("flywheelOuterHoleDiameter").value);
 	var outholedist = parseFloat(document.getElementById("flywheelOuterHoleDistance").value);
 	var outholeang = parseFloat(document.getElementById("flywheelOuterHoleAngle").value);
+	var curveangle = parseFloat(document.getElementById("curveAngle").value);
+	var curveadjust = parseFloat(document.getElementById("curveAdjust").value);
 	
 	// Some checks to "fix" invalid flywheels.  This doesn't cover them
 	// all, by any means!
 	var prevspokes = document.getElementById("prevFlywheelSpokes").value;
-	if (prevspokes != spokes) {
+	if (prevspokes != numSpokes) {
 		// If the previous # spokes had a 3-hole cutout then keep it that way.
 		if (inholeang == 180/prevspokes) {
-			inholeang = 180/spokes;
+			inholeang = 180/numSpokes;
 			document.getElementById("flywheelInnerHoleAngle").value = inholeang.toFixed(angdigits);
 		}
 	}
-	document.getElementById("prevFlywheelSpokes").value = spokes;
-	if (inholeang > 180/spokes) {
-		inholeang = 180/spokes;
+	document.getElementById("prevFlywheelSpokes").value = numSpokes;
+	if (inholeang > 180/numSpokes) {
+		inholeang = 180/numSpokes;
 		document.getElementById("flywheelInnerHoleAngle").value = inholeang.toFixed(angdigits);
 	}	
 	
 	var fly = calculateFlywheel(
-			spokes,					// number of spokes
+			numSpokes,					// number of spokes
 			flydia/2,				// radius of flywheel
 			flydia/2 - rim,			// radius of rim
 			hubdia/2,				// radius of hub
@@ -480,7 +482,8 @@ function buildFlywheels() {
 			inholedist,				// distance to center of inner hole
 			outholedia/2,				// radius of outer cut hole
 			outholeang,				// angle of outer cut hole
-			outholedist);			// distance to center of outer hole
+			outholedist,			// distance to center of outer hole
+			curveangle);			// angle for curved spokes (0 for straight)
 	
 	//
 	// Finally draw it, and draw it again with dimension markup.
@@ -491,9 +494,7 @@ function buildFlywheels() {
 	drawFlywheelDemo(canvasdims, fly);
 	drawFlywheelDims(canvasdims, fly);
 	var canvasdebug = document.getElementById("debugCanvas");
-	var curvangle = parseFloat(document.getElementById("curveAngle").value);
-	var curvadjust = parseFloat(document.getElementById("curveAdjust").value);
-	debugFlywheel(canvasdebug, fly, curvangle, curvadjust);
+	debugFlywheel(canvasdebug, fly, curveangle, curveadjust);
 
 	//
 	// Now do a pile of document fixups to personalize the web page
@@ -501,14 +502,13 @@ function buildFlywheels() {
 	//
 	var RTrotate = document.getElementById("RTrotate");
 	var RToffset = document.getElementById("RToffset");
-	var si = fly.spkinfo[0];
-	var cutangle = 360 - si.leftCutAngle;
+	var cutangle = 360 - fly.leftCutAngle;
 	if (cutangle == 360)
 		cutangle = 0;	// more sane
 	var backangle = 360 - cutangle;
 	if (backangle == 360)
 		backangle = 0;	// more sane
-	var cuts = rotate(si.leftCutEdgeStart, cutangle);
+	var cuts = rotate(fly.leftCutEdgeStart, cutangle);
 	RTrotate.innerHTML = cutangle.toFixed(angdigits);
 	RToffset.innerHTML = cuts.x.toFixed(lendigits);
 	// More instruction customization:
@@ -519,12 +519,12 @@ function buildFlywheels() {
 	document.getElementById("instOuterArc").innerHTML = (fly.outerHoleDistance + fly.outerHoleRadius).toFixed(lendigits);
 	document.getElementById("instOuterDist").innerHTML = fly.outerHoleDistance.toFixed(lendigits);
 	document.getElementById("instOuterRadius").innerHTML = fly.outerHoleRadius.toFixed(lendigits);
-	document.getElementById("instRTspokeAngle1").innerHTML = fly.spokedeg.toFixed(angdigits);
-	document.getElementById("instRTspokeAngle2").innerHTML = fly.spokedeg.toFixed(angdigits);
-	document.getElementById("instRTspokeAngle3").innerHTML = fly.spokedeg.toFixed(angdigits);
+	document.getElementById("instRTspokeAngle1").innerHTML = fly.spokeAngle.toFixed(angdigits);
+	document.getElementById("instRTspokeAngle2").innerHTML = fly.spokeAngle.toFixed(angdigits);
+	document.getElementById("instRTspokeAngle3").innerHTML = fly.spokeAngle.toFixed(angdigits);
 
 	var ThreeHoleAngle = document.getElementById("ThreeHoleAngle");
-	var angle3hole = fly.spokedeg/2;
+	var angle3hole = fly.spokeAngle/2;
 	ThreeHoleAngle.innerHTML = angle3hole.toFixed(angdigits);
 	
 	// Calculate thickness of spoke at inner and outer holes.
@@ -533,8 +533,8 @@ function buildFlywheels() {
 	// So just use the X dimension less the radius of the hole and double it.
 	var InnerThick = document.getElementById("InnerThick");
 	var OuterThick = document.getElementById("OuterThick");
-	var innerSpokeThickness = (si.leftInnerCenter.x - fly.innerHoleRadius)*2;
-	var outerSpokeThickness = (si.leftOuterCenter.x - fly.outerHoleRadius)*2;
+	var innerSpokeThickness = (fly.leftInnerCenter.x - fly.innerHoleRadius)*2;
+	var outerSpokeThickness = (fly.leftOuterCenter.x - fly.outerHoleRadius)*2;
 	InnerThick.innerHTML = innerSpokeThickness.toFixed(lendigits);
 	OuterThick.innerHTML = outerSpokeThickness.toFixed(lendigits);
 	
@@ -543,20 +543,23 @@ function buildFlywheels() {
 	// Each has a single row heading, so we delete the extra rows
 	// and generate new ones.  Table row indexes start at 0 (the heading).
 	//
-	var table;
 	
+	var table;
+
 	// The spokeTable.  This is just a list of the primary spoke
 	// angles and is more of a reference than anything.
 	table = document.getElementById("spokeTable");
 	// clear table (leave heading row 0)
 	while (table.rows.length > 1)
 			table.deleteRow(-1);	// delete last row
-	for (var spk=0; spk < spokes; spk++) {
+	var spokeangle = 0;
+	for (var spk=0; spk < numSpokes; spk++) {
 		var row = table.insertRow(-1);	// append row
 		var spkcell = row.insertCell(0);
 		var spkang = row.insertCell(1);
 		spkcell.innerHTML = spk+1;   // number from 1
-		spkang.innerHTML = fly.spkinfo[spk].angle.toFixed(angdigits);
+		spkang.innerHTML = spokeangle.toFixed(angdigits);
+		spokeangle += fly.spokeAngle;
 	}
 	
 	// The inner hole cutout table.  If the left/right inner holes are
@@ -566,24 +569,29 @@ function buildFlywheels() {
 	// clear table (leave heading row 0)
 	while (table.rows.length > 1)
 			table.deleteRow(-1);	// delete last row
-	for (var spk=0; spk < spokes; spk++) {
+	var leftinangle = fly.leftInnerAngle;
+	var rightinangle = fly.rightInnerAngle;
+	for (var spk=0; spk < numSpokes; spk++) {
 		// Always insert the left hole.
 		var row = table.insertRow(-1);	// append row
 		var spkcell = row.insertCell(0);
 		var spkang = row.insertCell(1);
 		spkcell.innerHTML = spk+1;   // number from 1
-		spkang.innerHTML = fly.spkinfo[spk].leftInnerAngle.toFixed(angdigits);
-		if (fly.spkinfo[spk].rightInnerAngle !=
-			fly.spkinfo[spk].leftInnerAngle) {
+		spkang.innerHTML = leftinangle.toFixed(angdigits);
+		if (leftinangle != rightinangle) {
 			// show right angle also.  Don't include the spoke # (blank)
 			spkang = row.insertCell(2);
-			spkang.innerHTML = fly.spkinfo[spk].rightInnerAngle.toFixed(angdigits);
+			spkang.innerHTML = rightinangle.toFixed(angdigits);
 		}
+		leftinangle += fly.spokeAngle;
+		rightinangle += fly.spokeAngle;
 	}
 	// Update the message under the table with actual dimensions.
+	// Is there a better way to do this?  Conditional HTML of some sort would
+	// be much better.  QQQ
 	document.getElementById("inTabDia").innerHTML = (fly.innerHoleRadius*2).toFixed(lendigits);
 	document.getElementById("inTabDist").innerHTML = fly.innerHoleDistance.toFixed(lendigits);
-	if (fly.spkinfo[0].rightInnerAngle == fly.spkinfo[0].leftInnerAngle) {
+	if (fly.rightInnerAngle == fly.leftInnerAngle) {
 			document.getElementById("inTab4holeMsg").innerHTML =
 			"This is a 3-hole web cutout, so there is only one hole to " +
 			"drill on the clockwise side of each spoke.  " + 
@@ -616,15 +624,20 @@ function buildFlywheels() {
 	// clear table (leave heading row 0)
 	while (table.rows.length > 1)
 			table.deleteRow(-1);	// delete last row
-	for (var spk=0; spk < spokes; spk++) {
+	var leftoutangle = fly.leftOuterAngle;
+	var rightoutangle = fly.rightOuterAngle;
+	for (var spk=0; spk < numSpokes; spk++) {
 		var row = table.insertRow(-1);	// append row
 		var spkcell = row.insertCell(0);
 		var spkang1 = row.insertCell(1);
 		var spkang2 = row.insertCell(2);
 
 		spkcell.innerHTML = spk+1;   // number from 1
-		spkang1.innerHTML = fly.spkinfo[spk].leftOuterAngle.toFixed(angdigits);
-		spkang2.innerHTML = fly.spkinfo[spk].rightOuterAngle.toFixed(angdigits);
+		spkang1.innerHTML = leftoutangle.toFixed(angdigits);
+		spkang2.innerHTML = rightoutangle.toFixed(angdigits);
+		
+		leftoutangle += fly.spokeAngle;
+		rightoutangle += fly.spokeAngle;
 	}
 	// Update the message under the table with actual dimensions.
 	document.getElementById("outTabDia").innerHTML = (fly.outerHoleRadius*2).toFixed(lendigits);
@@ -940,7 +953,7 @@ function drawArc(context, x, y, radius, start, end, color, pattern)
  * this so it can be understood.
  */
 function calculateFlywheel(
-	spokes,				// 2..something reasonable.
+	numSpokes,				// 2..something reasonable.
 	flywheelRadius,		// outside of flywheel in units (mm, inches, etc)
 	rimRadius,			// inside of flywheel rim
 	hubRadius,			// outside of hub
@@ -950,13 +963,15 @@ function calculateFlywheel(
 	innerHoleDistance,	// radius of inner hole from the center
 	outerHoleRadius,	// hole size used in the web near the rim
 	outerHoleAngle,		// angle of outer hole clockwise from vertical
-	outerHoleDistance	// radius of outer hole from the center
+	outerHoleDistance,	// radius of outer hole from the center
+	curveAngle			// twist angle of outer rim for curved spokes
 ) {
 
 	// Return an object with a pile of fields, including the inputs
 	var fly = {
-		spokes: spokes,
-		spokedeg: 360 / spokes,
+		numSpokes: numSpokes,
+		spokeAngle: 360 / numSpokes,
+		spokeBisect: 180 / numSpokes,
 		flywheelRadius: flywheelRadius,
 		rimRadius: rimRadius,
 		hubRadius: hubRadius,
@@ -965,108 +980,94 @@ function calculateFlywheel(
 		innerHoleDistance: innerHoleDistance,
 		outerHoleRadius: outerHoleRadius,
 		outerHoleDistance: outerHoleDistance,
-		spkinfo: []		// Array of info per spoke filled in below.
+		curveAngle: curveAngle,
 	};
 	
+	// Now calculate for spoke #0 (web clockwise from this spoke)
+	// All other spokes can use this data provided it is rotated by
+	// n*fly.spokeAngle, where n is the spoke #.
+	
 
-	// Fill in spkinfo
-	// Inner and outer circle center coords go here.
-	var spk;
-	var spkangle = 0;
-	for (spk = 0; spk < spokes; spk++) {
-		var si = {};	// spoke info object
-		fly.spkinfo[spk] = si;  // remember it, but use si as a shortcut
-		
-		// Assign this spoke's angle (relate to vertical which is 0).
-		si.angle = spkangle;
-		
-		// Calculate angles and coords of the 4 holes
-		var inpoint = toPoint(0,innerHoleDistance);
-		var outpoint = toPoint(0,outerHoleDistance);
-		si.leftInnerAngle = si.angle + innerHoleAngle;
-		si.leftInnerCenter = rotate(inpoint, si.leftInnerAngle);
-		si.leftOuterAngle = si.angle + outerHoleAngle;
-		si.leftOuterCenter = rotate(outpoint, si.leftOuterAngle);
-		si.rightInnerAngle = si.angle + fly.spokedeg - innerHoleAngle;
-		si.rightInnerCenter = rotate(inpoint, si.rightInnerAngle);
-		si.rightOuterAngle = si.angle + fly.spokedeg - outerHoleAngle;
-		si.rightOuterCenter = rotate(outpoint, si.rightOuterAngle);
-		
-		// Calculate the finished edge outer arc.
-		si.edgeOuterArc = {};  // new object.
-		si.edgeOuterArc.radius = outerHoleDistance + outerHoleRadius;
-		si.edgeOuterArc.startAngle = si.leftOuterAngle;
-		si.edgeOuterArc.endAngle = si.rightOuterAngle;
-		// Calculate the finished edge inner arc.
-		si.edgeInnerArc = {};  // new object.
-		si.edgeInnerArc.radius = innerHoleDistance - innerHoleRadius;
-		si.edgeInnerArc.startAngle = si.leftInnerAngle;
-		si.edgeInnerArc.endAngle = si.rightInnerAngle;
-		
-		// Now the tricky bits.  Calculate the left and right cut lines.
-		// We'll produce x,y start/end points as well as length and angle.
-		// First calc the angles between the center points of inner/outer holes.
-		var leftHoleCenterAngle = angle(si.leftInnerCenter, si.leftOuterCenter);
-		var leftHoleDistance = distance(si.leftInnerCenter,	si.leftOuterCenter);
-		var rightHoleCenterAngle = angle(si.rightInnerCenter, si.rightOuterCenter);
-		var rightHoleDistance = distance(si.rightInnerCenter, si.rightOuterCenter);
+	// Calculate angles and coords of the 4 holes
+	// Note that we take a Y point and rotate it to trivially calculate these.
+	var inpoint = toPoint(0,innerHoleDistance);
+	var outpoint = toPoint(0,outerHoleDistance);
+	fly.leftInnerAngle = innerHoleAngle;
+	fly.leftInnerCenter = rotate(inpoint, fly.leftInnerAngle);
+	fly.leftOuterAngle = outerHoleAngle;
+	fly.leftOuterCenter = rotate(outpoint, fly.leftOuterAngle);
+	fly.rightInnerAngle = fly.spokeAngle - innerHoleAngle;
+	fly.rightInnerCenter = rotate(inpoint, fly.rightInnerAngle);
+	fly.rightOuterAngle = fly.spokeAngle - outerHoleAngle;
+	fly.rightOuterCenter = rotate(outpoint, fly.rightOuterAngle);
 
-		// Next we need to work with the coords and angle formed because the
-		// inner/outer holes might be different diameter.  Let's temporarily
-		// do calculations with a Y axis straight through the center points
-		// of the inner/outer holes where Y=0 is the center of the inner hole.
-		var leftStart = rotate(toPoint(-fly.innerHoleRadius, 0), leftHoleCenterAngle);
-		var leftEnd = rotate(toPoint(-fly.outerHoleRadius, leftHoleDistance), leftHoleCenterAngle);
-		var rightStart = rotate(toPoint(fly.innerHoleRadius, 0), rightHoleCenterAngle);
-		var rightEnd = rotate(toPoint(fly.outerHoleRadius, rightHoleDistance), rightHoleCenterAngle);
+	// Calculate the finished edge outer arc.
+	fly.edgeOuterArc = {};  // new object.
+	fly.edgeOuterArc.radius = outerHoleDistance + outerHoleRadius;
+	fly.edgeOuterArc.startAngle = fly.leftOuterAngle;
+	fly.edgeOuterArc.endAngle = fly.rightOuterAngle;
+	
+	// Calculate the finished edge inner arc.
+	fly.edgeInnerArc = {};  // new object.
+	fly.edgeInnerArc.radius = innerHoleDistance - innerHoleRadius;
+	fly.edgeInnerArc.startAngle = fly.leftInnerAngle;
+	fly.edgeInnerArc.endAngle = fly.rightInnerAngle;
+
+	// Now the tricky bits.  Calculate the left and right cut lines.
+	// We'll produce x,y start/end points as well as length and angle.
+	// First calc the angles between the center points of inner/outer holes.
+	var leftHoleCenterAngle = angle(fly.leftInnerCenter, fly.leftOuterCenter);
+	var leftHoleDistance = distance(fly.leftInnerCenter, fly.leftOuterCenter);
+	var rightHoleCenterAngle = angle(fly.rightInnerCenter, fly.rightOuterCenter);
+	var rightHoleDistance = distance(fly.rightInnerCenter, fly.rightOuterCenter);
+
+	// Next we need to work with the coords and angle formed because the
+	// inner/outer holes might be different diameter.  Let's temporarily
+	// do calculations with a Y axis straight through the center points
+	// of the inner/outer holes where Y=0 is the center of the inner hole.
+	var leftStart = rotate(toPoint(-fly.innerHoleRadius, 0), leftHoleCenterAngle);
+	var leftEnd = rotate(toPoint(-fly.outerHoleRadius, leftHoleDistance), leftHoleCenterAngle);
+	var rightStart = rotate(toPoint(fly.innerHoleRadius, 0), rightHoleCenterAngle);
+	var rightEnd = rotate(toPoint(fly.outerHoleRadius, rightHoleDistance), rightHoleCenterAngle);
 		
-		// The positions are currently relative to 0,0 in those
-		// calculations which was the center of the inner hole.  Adjust.
-		si.leftCutEdgeStart = addPoints(si.leftInnerCenter, leftStart);
-		si.leftCutEdgeEnd = addPoints(si.leftInnerCenter, leftEnd);
-		si.leftCutAngle = angle(si.leftCutEdgeStart, si.leftCutEdgeEnd);
-		si.rightCutEdgeStart = addPoints(si.rightInnerCenter, rightStart);
-		si.rightCutEdgeEnd = addPoints(si.rightInnerCenter, rightEnd);
-		si.rightCutAngle = angle(si.rightCutEdgeStart, si.rightCutEdgeEnd);
+	// The positions are currently relative to 0,0 in those
+	// calculations which was the center of the inner hole.  Adjust.
+	fly.leftCutEdgeStart = addPoints(fly.leftInnerCenter, leftStart);
+	fly.leftCutEdgeEnd = addPoints(fly.leftInnerCenter, leftEnd);
+	fly.leftCutAngle = angle(fly.leftCutEdgeStart, fly.leftCutEdgeEnd);
+	fly.rightCutEdgeStart = addPoints(fly.rightInnerCenter, rightStart);
+	fly.rightCutEdgeEnd = addPoints(fly.rightInnerCenter, rightEnd);
+	fly.rightCutAngle = angle(fly.rightCutEdgeStart, fly.rightCutEdgeEnd);
 
-		// Lock the angles in to rounded numbers
-		si.leftCutAngle = si.leftCutAngle.toFixed(angdigits);
-		si.rightCutAngle = si.rightCutAngle.toFixed(angdigits);
+	// Lock the angles in to rounded numbers
+	fly.leftCutAngle = fly.leftCutAngle.toFixed(angdigits);
+	fly.rightCutAngle = fly.rightCutAngle.toFixed(angdigits);
 
-		/*
-		console.log("centers (" + si.leftInnerCenter.x + "," + si.leftInnerCenter.y + ") to (" + si.leftOuterCenter.x + "," + si.leftOuterCenter.y + ")");
-		console.log("angle=" + si.leftCutAngle + " cutline (" + si.leftCutEdgeStart.x + "," + si.leftCutEdgeStart.y + ") to (" + si.leftCutEdgeEnd.x + "," + si.leftCutEdgeEnd.y + ")");
-		console.log("inner distance=" + distance(si.leftCutEdgeStart, si.leftInnerCenter) + "  outer distance=" + distance(si.leftCutEdgeEnd, si.leftOuterCenter));
-		*/
-
-		// Now calculate 4 drawing arcs for the remaining edges of the
-		// holes that were drilled.  These aren't useful on the mill, but
-		// are useful when drawing the flywheel.  We already have recorded
-		// the arc centers and radii as center/radius of each hole, so all
-		// we need to record now is the start/end angles of each arc.
-		// (Note:  I'm cheating in calculations here a little, not accounting
-		// for the angle caused by the differing hole sizes)
-		si.leftOuterHoleArc = {};
-		si.leftOuterHoleArc.startAngle = leftHoleCenterAngle - 90;
-		si.leftOuterHoleArc.endAngle = si.leftOuterAngle;
-		si.leftInnerHoleArc = {};
-		si.leftInnerHoleArc.startAngle = si.leftInnerAngle - 180;
-		si.leftInnerHoleArc.endAngle = leftHoleCenterAngle - 90 - 360;
-		si.rightOuterHoleArc = {};
-		si.rightOuterHoleArc.startAngle = si.rightOuterAngle;
-		si.rightOuterHoleArc.endAngle = rightHoleCenterAngle - 270;
-		si.rightInnerHoleArc = {};
-		si.rightInnerHoleArc.startAngle = rightHoleCenterAngle + 90;
-		si.rightInnerHoleArc.endAngle = si.rightInnerAngle - 180;
-		
-		// advance to next angle
-		spkangle += fly.spokedeg;
-	}
+	// Now calculate 4 drawing arcs for the remaining edges of the
+	// holes that were drilled.  These aren't useful on the mill, but
+	// are useful when drawing the flywheel.  We already have recorded
+	// the arc centers and radii as center/radius of each hole, so all
+	// we need to record now is the start/end angles of each arc.
+	// (Note:  I'm cheating in calculations here a little, not accounting
+	// for the angle caused by the differing hole sizes)
+	fly.leftOuterHoleArc = {};
+	fly.leftOuterHoleArc.startAngle = leftHoleCenterAngle - 90;
+	fly.leftOuterHoleArc.endAngle = fly.leftOuterAngle;
+	fly.leftInnerHoleArc = {};
+	fly.leftInnerHoleArc.startAngle = fly.leftInnerAngle - 180;
+	fly.leftInnerHoleArc.endAngle = leftHoleCenterAngle - 90 - 360;
+	fly.rightOuterHoleArc = {};
+	fly.rightOuterHoleArc.startAngle = fly.rightOuterAngle;
+	fly.rightOuterHoleArc.endAngle = rightHoleCenterAngle - 270;
+	fly.rightInnerHoleArc = {};
+	fly.rightInnerHoleArc.startAngle = rightHoleCenterAngle + 90;
+	fly.rightInnerHoleArc.endAngle = fly.rightInnerAngle - 180;
 
 	return fly;
 }
 
-/* Draw the Flywheel.
+/*
+ * Draw the Flywheel.
  *
  */
 function drawFlywheelDemo(canvas, fly) {
@@ -1106,89 +1107,109 @@ function drawFlywheelDemo(canvas, fly) {
 	// Loop through the spokes and draw stuff using the spkinfo.
 	// Note that the info for spoke position N refers to detail clockwise
 	// from the spoke.  Position N=0 is straight up.
-	var spk;
-	for (spk in fly.spkinfo) {
-		var si = fly.spkinfo[spk];
-		drawRadialLine(context, offsetx, offsety, si.angle,
+	var thisangle = 0;
+	for (var spk=0; spk < fly.numSpokes; spk++) {
+		drawRadialLine(context, offsetx, offsety, thisangle,
 				fly.flywheelRadius*fscale*1.05,   		// scale up 10%
 				"black", pattern_dash_dot_dot);
 		// Draw the 4 holes
+		var leftInnerCenter = rotate(fly.leftInnerCenter, thisangle);
 		drawCircle(context,
-					offsetx + si.leftInnerCenter.x*fscale,
-					offsety - si.leftInnerCenter.y*fscale, // Y goes down in canvas
+					offsetx + leftInnerCenter.x*fscale,
+					offsety - leftInnerCenter.y*fscale, // Y goes down in canvas
 					fly.innerHoleRadius*fscale,
 					"lightgray", fill_none, pattern_solid);
+		var rightInnerCenter = rotate(fly.rightInnerCenter, thisangle);
 		drawCircle(context,
-					offsetx + si.rightInnerCenter.x*fscale,
-					offsety - si.rightInnerCenter.y*fscale, // Y goes down in canvas
+					offsetx + rightInnerCenter.x*fscale,
+					offsety - rightInnerCenter.y*fscale, // Y goes down in canvas
 					fly.innerHoleRadius*fscale,
 					"lightgray", fill_none, pattern_solid);
+		var leftOuterCenter = rotate(fly.leftOuterCenter, thisangle);
 		drawCircle(context,
-					offsetx + si.leftOuterCenter.x*fscale,
-					offsety - si.leftOuterCenter.y*fscale, // Y goes down in canvas
+					offsetx + leftOuterCenter.x*fscale,
+					offsety - leftOuterCenter.y*fscale, // Y goes down in canvas
 					fly.outerHoleRadius*fscale,
 					"lightgray", fill_none, pattern_solid);
+		var rightOuterCenter = rotate(fly.rightOuterCenter, thisangle);
 		drawCircle(context,
-					offsetx + si.rightOuterCenter.x*fscale,
-					offsety - si.rightOuterCenter.y*fscale, // Y goes down in canvas
+					offsetx + rightOuterCenter.x*fscale,
+					offsety - rightOuterCenter.y*fscale, // Y goes down in canvas
 					fly.outerHoleRadius*fscale,
 					"lightgray", fill_none, pattern_solid);
 		// Draw the outer edge arc
 		drawArc(context, offsetx, offsety,
-					si.edgeOuterArc.radius*fscale,
-					si.edgeOuterArc.startAngle,
-					si.edgeOuterArc.endAngle,
+					fly.edgeOuterArc.radius*fscale,
+					fly.edgeOuterArc.startAngle + thisangle,
+					fly.edgeOuterArc.endAngle + thisangle,
 					"black", pattern_solid);
 		// Draw the inner edge arc
 		drawArc(context, offsetx, offsety,
-					si.edgeInnerArc.radius*fscale,
-					si.edgeInnerArc.startAngle,
-					si.edgeInnerArc.endAngle,
+					fly.edgeInnerArc.radius*fscale,
+					fly.edgeInnerArc.startAngle + thisangle,
+					fly.edgeInnerArc.endAngle + thisangle,
 					"black", pattern_solid);
-		// Draw left/right cut lines
-		drawLine(context,
-				offsetx+si.leftCutEdgeStart.x*fscale,
-				offsety-si.leftCutEdgeStart.y*fscale,  // Y goes down
-				offsetx+si.leftCutEdgeEnd.x*fscale,
-				offsety-si.leftCutEdgeEnd.y*fscale,		// Y goes down
-				"black", pattern_solid);
-		drawLine(context,
-				offsetx+si.rightCutEdgeStart.x*fscale,
-				offsety-si.rightCutEdgeStart.y*fscale,  // Y goes down
-				offsetx+si.rightCutEdgeEnd.x*fscale,
-				offsety-si.rightCutEdgeEnd.y*fscale,		// Y goes down
-				"black", pattern_solid);
-		// Draw arcs to connect cut lines with cut edge arcs
-		drawArc(context,
-				offsetx + si.leftOuterCenter.x*fscale,
-				offsety - si.leftOuterCenter.y*fscale, // Y goes down in canvas
-				fly.outerHoleRadius*fscale,
-				si.leftOuterHoleArc.startAngle,
-				si.leftOuterHoleArc.endAngle,
-				"black", pattern_solid);
-		drawArc(context,
-				offsetx + si.leftInnerCenter.x*fscale,
-				offsety - si.leftInnerCenter.y*fscale, // Y goes down in canvas
-				fly.innerHoleRadius*fscale,
-				si.leftInnerHoleArc.startAngle,
-				si.leftInnerHoleArc.endAngle,
-				"black", pattern_solid);
-		drawArc(context,
-				offsetx + si.rightOuterCenter.x*fscale,
-				offsety - si.rightOuterCenter.y*fscale, // Y goes down in canvas
-				fly.outerHoleRadius*fscale,
-				si.rightOuterHoleArc.startAngle,
-				si.rightOuterHoleArc.endAngle,
-				"black", pattern_solid);
-		drawArc(context,
-				offsetx + si.rightInnerCenter.x*fscale,
-				offsety - si.rightInnerCenter.y*fscale, // Y goes down in canvas
-				fly.innerHoleRadius*fscale,
-				si.rightInnerHoleArc.startAngle,
-				si.rightInnerHoleArc.endAngle,
-				"black", pattern_solid);
+		
+		if (fly.curveAngle == 0) {
+			// Draw left/right cut lines
+			var leftCutEdgeStart = rotate(fly.leftCutEdgeStart, thisangle);
+			var leftCutEdgeEnd = rotate(fly.leftCutEdgeEnd, thisangle);
+			drawLine(context,
+					offsetx+leftCutEdgeStart.x*fscale,
+					offsety-leftCutEdgeStart.y*fscale,  // Y goes down
+					offsetx+leftCutEdgeEnd.x*fscale,
+					offsety-leftCutEdgeEnd.y*fscale,		// Y goes down
+					"black", pattern_solid);
+			var rightCutEdgeStart = rotate(fly.rightCutEdgeStart, thisangle);
+			var rightCutEdgeEnd = rotate(fly.rightCutEdgeEnd, thisangle);
+			drawLine(context,
+					offsetx+rightCutEdgeStart.x*fscale,
+					offsety-rightCutEdgeStart.y*fscale,  // Y goes down
+					offsetx+rightCutEdgeEnd.x*fscale,
+					offsety-rightCutEdgeEnd.y*fscale,		// Y goes down
+					"black", pattern_solid);
+			
+			// Draw arcs to connect cut lines with cut edge arcs
+			// This makes the drawing look nice.  The inner/outer holes
+			// are drilled when milling and this forms these arcs as the
+			// inside web is cut away.
+			
+			// QQQ these should be fly.leftHoleCenterAngle ...
+			// but they are only valid for non-curved spokes.
+			var leftHoleCenterAngle = angle(fly.leftInnerCenter, fly.leftOuterCenter);
+			var rightHoleCenterAngle = angle(fly.rightInnerCenter, fly.rightOuterCenter);
 
+			drawArc(context,
+					offsetx + leftOuterCenter.x*fscale,
+					offsety - leftOuterCenter.y*fscale, // Y goes down in canvas
+					fly.outerHoleRadius*fscale,
+					leftHoleCenterAngle + thisangle - 90,
+					fly.leftOuterAngle + thisangle,
+					"black", pattern_solid);
+			drawArc(context,
+					offsetx + leftInnerCenter.x*fscale,
+					offsety - leftInnerCenter.y*fscale, // Y goes down in canvas
+					fly.innerHoleRadius*fscale,
+					fly.leftInnerAngle + thisangle - 180,
+					leftHoleCenterAngle + thisangle - 90 - 360,
+					"black", pattern_solid);
+			drawArc(context,
+					offsetx + rightOuterCenter.x*fscale,
+					offsety - rightOuterCenter.y*fscale, // Y goes down in canvas
+					fly.outerHoleRadius*fscale,
+					fly.rightOuterAngle + thisangle,
+					rightHoleCenterAngle + thisangle - 270,
+					"black", pattern_solid);
+			drawArc(context,
+					offsetx + rightInnerCenter.x*fscale,
+					offsety - rightInnerCenter.y*fscale, // Y goes down in canvas
+					fly.innerHoleRadius*fscale,
+					rightHoleCenterAngle + thisangle + 90,
+					fly.rightInnerAngle + thisangle - 180,
+					"black", pattern_solid);
+		}
 
+		thisangle += fly.spokeAngle;
 	}
 }
 
@@ -1206,7 +1227,6 @@ function drawFlywheelDims(canvas, fly) {
 	var offsety = canvas.height / 2;
 	var fradius =  Math.min(canvas.width, canvas.height) * 0.90 / 2;
 	var fscale = fradius / fly.flywheelRadius;
-	var si0 = fly.spkinfo[0];
 					
 	/* First, dim the flywheel by drawing a transparent white rectangle over it.  Cool, no? :) */
 	context.save();
@@ -1220,23 +1240,23 @@ function drawFlywheelDims(canvas, fly) {
 	// there are really only 3 holes.  We draw all 4 here because it makes
 	// little difference to draw the same inner circle twice.
 	drawCircle(context,
-				offsetx + si0.leftInnerCenter.x*fscale,
-				offsety - si0.leftInnerCenter.y*fscale, // Y goes down in canvas
+				offsetx + fly.leftInnerCenter.x*fscale,
+				offsety - fly.leftInnerCenter.y*fscale, // Y goes down in canvas
 				fly.innerHoleRadius*fscale,
 				"black", fill_none, pattern_solid);
 	drawCircle(context,
-				offsetx + si0.rightInnerCenter.x*fscale,
-				offsety - si0.rightInnerCenter.y*fscale, // Y goes down in canvas
+				offsetx + fly.rightInnerCenter.x*fscale,
+				offsety - fly.rightInnerCenter.y*fscale, // Y goes down in canvas
 				fly.innerHoleRadius*fscale,
 				"black", fill_none, pattern_solid);
 	drawCircle(context,
-				offsetx + si0.leftOuterCenter.x*fscale,
-				offsety - si0.leftOuterCenter.y*fscale, // Y goes down in canvas
+				offsetx + fly.leftOuterCenter.x*fscale,
+				offsety - fly.leftOuterCenter.y*fscale, // Y goes down in canvas
 				fly.outerHoleRadius*fscale,
 				"black", fill_none, pattern_solid);
 	drawCircle(context,
-				offsetx + si0.rightOuterCenter.x*fscale,
-				offsety - si0.rightOuterCenter.y*fscale, // Y goes down in canvas
+				offsetx + fly.rightOuterCenter.x*fscale,
+				offsety - fly.rightOuterCenter.y*fscale, // Y goes down in canvas
 				fly.outerHoleRadius*fscale,
 				"black", fill_none, pattern_solid);
 	// Redraw the hole distance lines in black, but keep them dotted
@@ -1247,35 +1267,35 @@ function drawFlywheelDims(canvas, fly) {
 
 
 	// Radial dimensions from the center of the flywheel.
-	// These are offset from the spokedeg to get them out of the way of the
+	// These are offset from the spokeAngle to get them out of the way of the
 	// detail dimensions for cutting the webs.
 	
 	// Inner hole distance
-	drawRadialDim(context, offsetx, offsety, fly.spokedeg + 10,
+	drawRadialDim(context, offsetx, offsety, fly.spokeAngle + 10,
 			0, fly.innerHoleDistance*fscale,
 			fly.innerHoleDistance.toFixed(lendigits), 0.75,
 			"black", pattern_solid);
 	
 	// Outer hole distance
-	drawRadialDim(context, offsetx, offsety, fly.spokedeg + 22.5,
+	drawRadialDim(context, offsetx, offsety, fly.spokeAngle + 22.5,
 			0, fly.outerHoleDistance*fscale,
 			fly.outerHoleDistance.toFixed(lendigits), 0.75,
 			"black", pattern_solid);
 	
 	// Rim radius
-	drawRadialDim(context, offsetx, offsety, fly.spokedeg + 32.5,
+	drawRadialDim(context, offsetx, offsety, fly.spokeAngle + 32.5,
 			0, fly.rimRadius*fscale,
 			fly.rimRadius.toFixed(lendigits), 0.75,
 			"black", pattern_solid);
 	// Rim thickness
 	var rim = fly.flywheelRadius - fly.rimRadius;
-	drawRadialDim(context, offsetx, offsety, fly.spokedeg + 28,
+	drawRadialDim(context, offsetx, offsety, fly.spokeAngle + 28,
 			fly.rimRadius*fscale, fly.flywheelRadius*fscale,
 			rim.toFixed(lendigits), 0.50,
 			"black", pattern_solid);
 
 	// Flywheel Radius dimension (do we need diameter?)
-	drawRadialDim(context, offsetx, offsety, fly.spokedeg + 40,
+	drawRadialDim(context, offsetx, offsety, fly.spokeAngle + 40,
 			0, fly.flywheelRadius*fscale,
 			fly.flywheelRadius.toFixed(lendigits), 0.70,
 			"black", pattern_solid);
@@ -1283,60 +1303,61 @@ function drawFlywheelDims(canvas, fly) {
 	// Hub Radius dimension is only useful as feedback from settings.
 	// I place it as the last dimension and push out the label since I
 	// know space is always going to be tight for the dimension to fit.
-	drawRadialDim(context, offsetx, offsety, fly.spokedeg + 75,
+	drawRadialDim(context, offsetx, offsety, fly.spokeAngle + 75,
 			0, fly.hubRadius*fscale,
 			fly.hubRadius.toFixed(lendigits), 0.80,
 			"black", pattern_solid);
 
 	// Outer hole angle.  Draw this in the first web cutout.
 	drawAngDim(context,
-		offsetx, offsety, 0, si0.leftOuterAngle,
+		offsetx, offsety, 0, fly.leftOuterAngle,
 		fradius * 0.88,
-		si0.leftOuterAngle.toFixed(angdigits) + DEGSYM, 0.98,
+		fly.leftOuterAngle.toFixed(angdigits) + DEGSYM, 0.98,
 		"black", pattern_solid);
 	
-	if (si0.rightOuterAngle > si0.leftOuterAngle) {  // should always be true
+	if (fly.rightOuterAngle > fly.leftOuterAngle) {  // should always be true
 		drawAngDim(context,
-			offsetx, offsety, 0, si0.rightOuterAngle,
+			offsetx, offsety, 0, fly.rightOuterAngle,
 			fradius * 0.95,
-			si0.rightOuterAngle.toFixed(angdigits) + DEGSYM, 0.98,
+			fly.rightOuterAngle.toFixed(angdigits) + DEGSYM, 0.98,
 			"black", pattern_solid);
 	}
 	
 	// Inner hole angle.  Draw this in the first web cutout.
 	drawAngDim(context,
-		offsetx, offsety, 0, si0.leftInnerAngle,
+		offsetx, offsety, 0, fly.leftInnerAngle,
 		fradius * 0.50,
-		si0.leftInnerAngle.toFixed(angdigits) + DEGSYM, 0.98,
+		fly.leftInnerAngle.toFixed(angdigits) + DEGSYM, 0.98,
 		"black", pattern_solid);
 	
-	if (si0.rightInnerAngle > si0.leftInnerAngle) {
+	if (fly.rightInnerAngle > fly.leftInnerAngle) {
 		// Second Inner hole angle.  Draw this in the first web cutout.
 		drawAngDim(context,
-			offsetx, offsety, 0, si0.rightInnerAngle,
+			offsetx, offsety, 0, fly.rightInnerAngle,
 			fradius * 0.57,
-			si0.rightInnerAngle.toFixed(angdigits) + DEGSYM, 0.98,
+			fly.rightInnerAngle.toFixed(angdigits) + DEGSYM, 0.98,
 			"black", pattern_solid);
 	}	
 
 
 	// Flywheel spoke angle.  Draw this in the last web cutout.
 	drawAngDim(context,
-		offsetx, offsety, -fly.spokedeg, 0,
+		offsetx, offsety, -fly.spokeAngle, 0,
 		fradius * 0.91,
-		fly.spokedeg.toFixed(angdigits) + DEGSYM, 0.98,
+		fly.spokeAngle.toFixed(angdigits) + DEGSYM, 0.98,
 		"black", pattern_solid);
 
 	// Add degree marks for each spoke.  Get this out of spkinfo
 	// even though it's easy to calculate.
 	context.save();
 	var spk;
-	for (spk=0; spk < fly.spokes; spk++) {
-		var si = fly.spkinfo[spk];
-		var label = si.angle.toFixed(angdigits) + DEGSYM;
+	var thisangle = 0;
+	for (spk=0; spk < fly.numSpokes; spk++) {
+		var label = thisangle.toFixed(angdigits) + DEGSYM;
 		var textwidth = context.measureText(label).width;
-		var dest = rotate(toPoint(0, fradius * 1.07), si.angle);
+		var dest = rotate(toPoint(0, fradius * 1.07), thisangle);
 		context.fillText(label, offsetx+dest.x - textwidth/2, offsety-dest.y);
+		thisangle += fly.spokeAngle;
 	}
 	context.restore();
 
@@ -1363,19 +1384,18 @@ function drawSpokeStep(step, canvas, fly) {
 	var offsety = canvas.height / 2;
 	var fradius =  Math.min(canvas.width, canvas.height) * 0.90 / 2;
 	var fscale = fradius / fly.flywheelRadius;
-	var si0 = fly.spkinfo[0];	// Use spoke 1 (index 0) for example steps
 	var cutangle = 0;
 	var cutshift = 0;
 	
 	if (step > 1) {
-		cutangle = 360-si0.leftCutAngle;
+		cutangle = 360-fly.leftCutAngle;
 		if (cutangle == 360)
 			cutangle = 0;	// more sane
 	}
 	
 	if (step > 2) {
 		// Calculate cut shift (cuts.x)
-		var cuts = rotate(si0.leftCutEdgeStart, cutangle);
+		var cuts = rotate(fly.leftCutEdgeStart, cutangle);
 		cutshift = cuts.x;
 	}
 	
@@ -1410,13 +1430,13 @@ function drawSpokeStep(step, canvas, fly) {
 	context.restore();
 
 	// Draw the spoke 0 reference line
-	drawRadialLine(context, offsetx, offsety, si0.angle + cutangle,
+	drawRadialLine(context, offsetx, offsety, fly.angle + cutangle,
 				fly.flywheelRadius*fscale*1.10,   		// scale up 10%
 				"black", pattern_dash_dot_dot);
 
 	// Draw the inner/outer holes.
-	var inctr = rotate(si0.leftInnerCenter, cutangle);
-	var outctr = rotate(si0.leftOuterCenter, cutangle);
+	var inctr = rotate(fly.leftInnerCenter, cutangle);
+	var outctr = rotate(fly.leftOuterCenter, cutangle);
 	drawCircle(context,
 				offsetx + inctr.x*fscale,
 				offsety - inctr.y*fscale, // Y goes down in canvas
@@ -1431,8 +1451,8 @@ function drawSpokeStep(step, canvas, fly) {
 	// Now draw the cut line in red
 	// This has already been completely calculated in the spkinfo
 	// but it needs rotation.
-	var start = rotate(si0.leftCutEdgeStart, cutangle);
-	var end = rotate(si0.leftCutEdgeEnd, cutangle);
+	var start = rotate(fly.leftCutEdgeStart, cutangle);
+	var end = rotate(fly.leftCutEdgeEnd, cutangle);
 	drawLine(context,
 			offsetx + start.x*fscale,
 			offsety - start.y*fscale,
@@ -1508,37 +1528,28 @@ function debugFlywheel(canvas, fly, curveangle, curveadjust) {
 	// Loop through the spokes and draw stuff using the spkinfo.
 	// Note that the info for spoke position N refers to detail clockwise
 	// from the spoke.  Position N=0 is straight up.
-	var spk;
-	for (spk in fly.spkinfo) {
-		// This spoke info
-		var si = fly.spkinfo[spk];
-		// The previous spoke info
-		var spkprev = spk-1;
-		if (spkprev < 0)
-			spkprev = fly.spokes-1;
-		var siprev = fly.spkinfo[spkprev];
-		
-		/* drawRadialLine(context, offsetx, offsety, si.angle,
-				fly.flywheelRadius*fscale*1.05,   		// scale up 10%
-				"black", pattern_dash_dot_dot); */
-				
+	var thisangle = 0;
+	for (var spk=0; spk < fly.numSpokes; spk++) {		
 		// Draw the 4 holes
+		var leftInnerCenter = rotate(fly.leftInnerCenter, thisangle);
 		drawCircle(context,
-					offsetx + si.leftInnerCenter.x*fscale,
-					offsety - si.leftInnerCenter.y*fscale, // Y goes down in canvas
+					offsetx + leftInnerCenter.x*fscale,
+					offsety - leftInnerCenter.y*fscale, // Y goes down in canvas
 					fly.innerHoleRadius*fscale,
 					"lightgray", fill_none, pattern_solid);
+		var rightInnerCenter = rotate(fly.rightInnerCenter, thisangle);
 		drawCircle(context,
-					offsetx + si.rightInnerCenter.x*fscale,
-					offsety - si.rightInnerCenter.y*fscale, // Y goes down in canvas
+					offsetx + rightInnerCenter.x*fscale,
+					offsety - rightInnerCenter.y*fscale, // Y goes down in canvas
 					fly.innerHoleRadius*fscale,
 					"lightgray", fill_none, pattern_solid);
 	
 		// Outer holes need to be rotated for curved spokes.
 		// calculateFlywheel should do this, but we'll adjust for debug.
-		var curveLeftOuterCenter = rotate(si.leftOuterCenter, curveangle);
-		var curveRightOuterCenter = rotate(si.rightOuterCenter, curveangle);
-		var curvePrevRightOuterCenter = rotate(siprev.rightOuterCenter, curveangle);
+		var curveLeftOuterCenter = rotate(fly.leftOuterCenter, thisangle+curveangle);
+		var curveRightOuterCenter = rotate(fly.rightOuterCenter, thisangle+curveangle);
+		var curvePrevRightOuterCenter = rotate(fly.rightOuterCenter, thisangle+curveangle - fly.spokeAngle);
+		var prevRightInnerCenter = rotate(fly.rightInnerCenter, thisangle - fly.spokeAngle);  // no curve angle on inner holes
 
 		drawCircle(context,
 					offsetx + curveLeftOuterCenter.x*fscale,
@@ -1553,16 +1564,16 @@ function debugFlywheel(canvas, fly, curveangle, curveadjust) {
 		
 		// Draw the outer edge arc
 		drawArc(context, offsetx, offsety,
-					si.edgeOuterArc.radius*fscale,
-					si.edgeOuterArc.startAngle + curveangle,
-					si.edgeOuterArc.endAngle + curveangle,
+					fly.edgeOuterArc.radius*fscale,
+					fly.edgeOuterArc.startAngle + thisangle + curveangle,
+					fly.edgeOuterArc.endAngle + thisangle + curveangle,
 					"black", pattern_solid);
 		
-		// Draw the inner edge arc
+		// Draw the inner edge arc   QQQ needs fixing
 		drawArc(context, offsetx, offsety,
-					si.edgeInnerArc.radius*fscale,
-					si.edgeInnerArc.startAngle,
-					si.edgeInnerArc.endAngle,
+					fly.edgeInnerArc.radius*fscale,
+					fly.edgeInnerArc.startAngle + thisangle,
+					fly.edgeInnerArc.endAngle + thisangle,
 					"black", pattern_solid);
 		
 		// Now work on the spoke.
@@ -1578,15 +1589,13 @@ function debugFlywheel(canvas, fly, curveangle, curveadjust) {
 		// holes so we get a nice transition.
 		
 		var ptA = midpoint(curvePrevRightOuterCenter, curveLeftOuterCenter);
-		var ptB = midpoint(siprev.rightInnerCenter, si.rightInnerCenter);
-		// Try this for ptC.  Adjust "right or left" with curveadjust
-		var ptC = rotate(toPoint(curveadjust*fly.flywheelRadius/100, 0), si.angle);
+		var ptB = midpoint(prevRightInnerCenter, leftInnerCenter);
+		var ptC = toPoint(0,0);  // center for now
 		
 		// Draw these points as circles for debug.
 		drawCircle(context,	offsetx + ptA.x*fscale,	offsety - ptA.y*fscale, 1, "black", "black", pattern_solid);
 		drawCircle(context,	offsetx + ptB.x*fscale,	offsety - ptB.y*fscale, 1, "black", "black", pattern_solid);
 		if (spk == 0) {
-			console.log("Spk=" + spk + " spkprev=" + spkprev + " A" + ptStr(ptA) + " B" + ptStr(ptB) + " prevRightOuter" + ptStr(curvePrevRightOuterCenter) + " leftOuter" + ptStr(curveLeftOuterCenter));
 			drawCircle(context,	offsetx + ptC.x*fscale,	offsety - ptC.y*fscale, 1, "black", "black", pattern_solid);
 		}
 		
@@ -1642,13 +1651,13 @@ function debugFlywheel(canvas, fly, curveangle, curveadjust) {
 		// unknown.  We know d=a+b, so let's find them.  When we do, we can
 		// use (a,h) to represent x,y.  All we need to do is rotate the triangle
 		// and then shift it by the original coords for the left vertex.
-		var d = distance(curveLeftOuterCenter, si.leftInnerCenter);
+		var d = distance(curveLeftOuterCenter, fly.leftInnerCenter);
 		var r1 = r - fly.outerHoleRadius;
 		var r2 = r - fly.innerHoleRadius;
 		var a = (d*d + r1*r1 - r2*r2) / (2*d);
 		var h = Math.sqrt(r1*r1 - a*a);
 
-		var ang = angle(si.leftInnerCenter, curveLeftOuterCenter);
+		var ang = angle(fly.leftInnerCenter, curveLeftOuterCenter);
 		var xy = rotate(toPoint(a,h), ang+90);
 		var innerarc = addPoints(xy, curveLeftOuterCenter);
 		if (spk == 0) {
@@ -1660,13 +1669,13 @@ function debugFlywheel(canvas, fly, curveangle, curveadjust) {
 		// The other side of the spoke is almost the same.
 		// However, we use the prev holes, of course, and we must ADD to get
 		// r1, r2 since we are on the near side of the holes.
-		var d = distance(curvePrevRightOuterCenter, siprev.rightInnerCenter);
+		var d = distance(curvePrevRightOuterCenter, prevRightInnerCenter);
 		var r1 = r + fly.outerHoleRadius;
 		var r2 = r + fly.innerHoleRadius;
 		var a = (d*d + r1*r1 - r2*r2) / (2*d);
 		var h = Math.sqrt(r1*r1 - a*a);
 
-		var ang = angle(siprev.rightInnerCenter, curvePrevRightOuterCenter);
+		var ang = angle(prevRightInnerCenter, curvePrevRightOuterCenter);
 		var xy = rotate(toPoint(a,h), ang+90);
 		var outerarc = addPoints(xy, curvePrevRightOuterCenter);
 		if (spk == 0) {
@@ -1675,6 +1684,7 @@ function debugFlywheel(canvas, fly, curveangle, curveadjust) {
 			drawCircle(context,	offsetx + outerarc.x*fscale,	offsety - outerarc.y*fscale, r*fscale, "orange", fill_none, pattern_dot);
 		}
 
+		thisangle += fly.spokeAngle;
 	}
 }
 
