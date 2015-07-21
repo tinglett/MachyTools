@@ -491,7 +491,6 @@ function buildFlywheels() {
 	var canvas = document.getElementById("flywheelDemoCanvas");
 	drawFlywheelDemo(canvas, fly);
 	var canvasdims = document.getElementById("flywheelDimsCanvas");
-	drawFlywheelDemo(canvasdims, fly);
 	drawFlywheelDims(canvasdims, fly);
 	var canvasdebug = document.getElementById("debugCanvas");
 	debugFlywheel(canvasdebug, fly, curveangle, curveadjust);
@@ -760,8 +759,269 @@ var pattern_dash_dot_dot = [5, 5, 2, 3, 2, 3];  // dash, dash-space, ...
 // I could define some standard fills here, but I use color names for now
 var fill_none = undefined;
 
-// Draw a line with color and pattern
-function drawLine(context, x1, y1, x2, y2, color, pattern)
+/*
+ * To save a lot of messy math as arguments to the drawing functions,
+ * we create a special context object for the drawing functions you will find
+ * here.  Hopefully this context won't be confused with a canvas context
+ * which is included as part of this "larger" context.
+ *
+ * Why do we need a special drawing context?  We want to draw with coordinates
+ * that are 0,0 in the center of the canvas, and we want to scale the drawing
+ * to a ratio of the flywheelRadius.  Therefore the flywheel is always
+ * zoomed the same.  The canvas drawing package can do scaling and transforms,
+ * but these impact text drawing which is something we don't want.
+ *
+ */
+function makeDrawingContext(canvas, radius)
+{
+	var flyctx = {};  // new object
+	flyctx.canvas = canvas;
+	flyctx.context = canvas.getContext("2d");
+	flyctx.offsetx = canvas.width / 2;
+	flyctx.offsety = canvas.height / 2;
+	flyctx.fscale = Math.min(canvas.width, canvas.height) * 0.90 /
+					(radius * 2);
+	return flyctx;
+}
+
+
+/*
+ * Draw a circle using the given color, fill, and pattern.
+ *
+ *	ctx		drawing context (from makeDrawingContext() above)
+ *	center	center point
+ *	radius	length relative to flywheel radius in the ctx
+ *	color	drawing color
+ *  fill	fill color (or use fill_none)
+ *  pattern	choose from patterns above including pattern_solid
+ */
+function drawCircleX(ctx, center, radius, color, fill, pattern)
+{
+	ctx.context.save();
+	ctx.context.strokeStyle = color;
+	if (pattern && ctx.context.setLineDash)  // NB: some browsers (IE<11) don't have setLineDash
+		ctx.context.setLineDash(pattern);
+	ctx.context.beginPath();
+	ctx.context.arc(ctx.offsetx+center.x*ctx.fscale,
+					ctx.offsety-center.y*ctx.fscale,
+					radius*ctx.fscale,0,2*Math.PI);
+	if (fill) {
+		ctx.context.fillStyle = fill;
+		ctx.context.fill();
+	}
+	ctx.context.stroke();
+	ctx.context.restore();
+}
+
+/*
+ * Draw a radial line at an angle from the given x,y starting point.
+ * The angle is in degrees and we interpret it as clockwise from
+ * straight up.  We could let the canvas do the rotation, but since
+ * we are doing so much trig anyway, just calculate it.
+ *
+ *	ctx		drawing context (from makeDrawingContext() above)
+ *	center	center point
+ * 	angleDeg	angle in degrees (up is zero)
+ *	length	length relative to flywheel radius in the ctx
+ *	color	drawing color
+ *  pattern	choose from patterns above including pattern_solid
+ */
+function drawRadialLineX(ctx, center, angleDeg, length, color, pattern)
+{
+	ctx.context.save();
+	ctx.context.strokeStyle = color;
+	if (pattern && ctx.context.setLineDash)
+		ctx.context.setLineDash(pattern);
+	ctx.context.beginPath();
+	ctx.context.moveTo(ctx.offsetx+center.x*ctx.fscale,
+					   ctx.offsety-center.y*ctx.fscale);
+	// rotate the endpoint of a vertical (x=0) line going up (y=length)
+	var dest = rotate(toPoint(0, length), angleDeg);
+	// subtract y to go up because canvas has 0,0 in the upper left
+	ctx.context.lineTo(ctx.offsetx+(center.x+dest.x)*ctx.fscale,
+					   ctx.offsety-(center.y-dest.y)*ctx.fscale);
+	ctx.context.stroke();
+	ctx.context.restore();
+}
+
+
+/*
+ * Draw a line with color and pattern
+ *
+  *	ctx		drawing context (from makeDrawingContext() above)
+ *	start	start point
+ * 	end		end point
+ *	color	drawing color
+ *  pattern	choose from patterns above including pattern_solid
+ */
+function drawLineX(ctx, start, end, color, pattern)
+{
+	ctx.context.save();
+	ctx.context.strokeStyle = color;
+	if (pattern && ctx.context.setLineDash)
+		ctx.context.setLineDash(pattern);
+	ctx.context.beginPath();
+	ctx.context.moveTo(ctx.offsetx+start.x*ctx.fscale,
+					   ctx.offsety-start.y*ctx.fscale);
+	ctx.context.lineTo(ctx.offsetx+end.x*ctx.fscale,
+					   ctx.offsety-end.y*ctx.fscale);
+	ctx.context.stroke();
+	ctx.context.restore();
+}
+
+/*
+ * Draw an arc
+ * The start/end angles are in degrees where 0 is straight up.
+ *
+ *	ctx		drawing context (from makeDrawingContext() above)
+ *	center	center point
+ *  radius	arc radius
+ * 	start	start angle in degrees (up is zero)
+ *	end		end angle
+ *	color	drawing color
+ *  pattern	choose from patterns above including pattern_solid
+
+ */
+function drawArcX(ctx, center, radius, start, end, color, pattern)
+{
+	var srad = degreesToRadians(start-90);
+	var erad = degreesToRadians(end-90);
+	ctx.context.save();
+	ctx.context.strokeStyle = color;
+	if (pattern && ctx.context.setLineDash)
+		ctx.context.setLineDash(pattern);
+	ctx.context.beginPath();
+	ctx.context.arc(ctx.offsetx+center.x*ctx.fscale,
+					ctx.offsety-center.y*ctx.fscale,
+					radius*ctx.fscale, srad, erad);
+	ctx.context.stroke();
+	ctx.context.restore();
+}
+
+/* Same as drawRadialLine, except now drawing a dimension line.
+ * This means adding arrowheads and a dimension label.
+ * The labelpos is the percent of the way from start to end for the
+ * center of the label.
+ */
+function drawRadialDimX(
+	ctx,		// drawing context (from makeDrawingContext() above)
+	center,		// center point
+	angleDeg,	// angle of dimension line
+	startlen,	// start of line by length (doesn't have to start at center)
+	length,		// length of dimension line
+	label,		// label text 
+	labelpos,	// position of label as percentage along drawn line
+	color,		// color of line
+	pattern)	// choose from patterns above including pattern_solid
+{
+	ctx.context.save();
+	ctx.context.strokeStyle = color;
+	if (pattern && ctx.context.setLineDash)
+		ctx.context.setLineDash(pattern);
+	
+	// We will draw a "horizontal" line and let canvas do the rotating for us.
+	// We use horizontal because that is how text is drawn.  This makes it a bit
+	// more complicated because we must interpret angleDeg=0 as "up".
+	// Since we want horizontal, we'll just subtract 90 degrees.
+	ctx.context.translate(ctx.offsetx+center.x*ctx.fscale,
+						  ctx.offsety-center.y*ctx.fscale);	// Now 0,0 is the center.
+	ctx.context.rotate(degreesToRadians(angleDeg-90));
+
+	// Adjust lengths for scale.
+	startlen *= ctx.fscale;
+	length *= ctx.fscale;
+	
+	// Now we can draw as if we are horizontal, but still must account for fscale
+	ctx.context.beginPath();
+	ctx.context.moveTo(startlen,0);
+	ctx.context.lineTo(length, 0);
+	// draw end arrowhead since we are here
+	ctx.context.lineTo(length-5, -3);
+	ctx.context.moveTo(length, 0);
+	ctx.context.lineTo(length-5, 3);
+	// draw start arrowhead
+	ctx.context.moveTo(startlen,0);
+	ctx.context.lineTo(startlen+5, -3);
+	ctx.context.moveTo(startlen,0);
+	ctx.context.lineTo(startlen+5, 3);
+	// Now draw the label in the middle
+	var textwidth = ctx.context.measureText(label).width;
+	ctx.context.fillStyle = color;
+	ctx.context.fillText(label, startlen+((length-startlen)*labelpos)-(textwidth/2), -3);
+	ctx.context.stroke();
+	ctx.context.restore();
+}
+
+
+
+/* This draws an angle dimension line.
+ *
+ * x,y			Center point of angle
+ * start, end	Start/end of angle in degrees with 0 as up.
+ * length		Length of dimension lines
+ * label		The label to draw.  Probably end - start :)
+ * labelpos		The percentage up the dimension lines to draw the
+ *				dimension arc and label.
+ * context, color and pattern define drawing context to use.
+ */
+function drawAngDimX(
+	ctx,		// drawing context (from makeDrawingContext() above)
+	center,		// center point
+	start,		// start angle
+	end,		// end angle
+	length,		// length of dimension lines
+	label,		// label text 
+	labelpos,	// position of label as percentage along drawn lines
+	color,		// color of line
+	pattern)	// choose from patterns above including pattern_solid
+{
+	var srad = degreesToRadians(start-90);
+	var erad = degreesToRadians(end-90);
+	var sdim = rotate(toPoint(0, length), start);
+	var edim = rotate(toPoint(0, length), end);
+
+	ctx.context.save();
+	ctx.context.strokeStyle = color;
+	if (pattern && ctx.context.setLineDash)
+		ctx.context.setLineDash(pattern);
+	ctx.context.beginPath();
+	// Draw dimension lines first.
+	ctx.context.moveTo(ctx.offsetx+center.x*ctx.fscale,
+					   ctx.offsety-center.y*ctx.fscale);
+	ctx.context.lineTo(ctx.offsetx+(center.x+sdim.x)*ctx.fscale,
+					   ctx.offsety-(center.y+sdim.y)*ctx.fscale);
+	ctx.context.moveTo(ctx.offsetx+center.x*ctx.fscale,
+					   ctx.offsety-center.y*ctx.fscale);
+	ctx.context.lineTo(ctx.offsetx+(center.x+edim.x)*ctx.fscale,
+					   ctx.offsety-(center.y+edim.y)*ctx.fscale);
+	ctx.context.stroke();
+	ctx.context.beginPath();
+	// The arc.  Not bothering with arrow heads.
+	ctx.context.arc(ctx.offsetx+center.x*ctx.fscale,
+					ctx.offsety-center.y*ctx.fscale,
+					(length*labelpos)*ctx.fscale,srad,erad);
+	ctx.context.stroke();
+
+	// Now draw the label.  We center this on the arc and want it rotated to
+	// match the arc.  Let the canvas do the rotation.  Remember up is 0 deg
+	// so I need to subtract 90 to get that.  HOWEVER, we want the text 90
+	// degrees from the angle anyway, so it works out without this!  Sweet.
+	ctx.context.translate(ctx.offsetx+center.x*ctx.fscale,
+						  ctx.offsety-center.y*ctx.fscale); // Now 0,0 is the center.
+	ctx.context.rotate(degreesToRadians((start+end)/2));	// midway angle
+	ctx.context.fillStyle = color;
+	var textwidth = ctx.context.measureText(label).width;
+	var textheight = ctx.context.measureText(label).height;
+	ctx.context.fillText(label, -textwidth/2, -(length*ctx.fscale)*labelpos-5);
+
+	ctx.context.restore();
+}
+
+
+/****************************************************************************/
+// Draw a circle
+// Nothing exciting here, except we use the given color, fill, and pattern.
+function drawCircle(context, x, y, radius, color, fill, pattern)
 {
 	context.save();
 	if (color)
@@ -769,8 +1029,11 @@ function drawLine(context, x1, y1, x2, y2, color, pattern)
 	if (pattern && context.setLineDash)
 		context.setLineDash(pattern);
 	context.beginPath();
-	context.moveTo(x1, y1);
-	context.lineTo(x2, y2);
+	context.arc(x,y,radius,0,2*Math.PI);
+	if (fill) {
+		context.fillStyle = fill;
+		context.fill();
+	}
 	context.stroke();
 	context.restore();
 }
@@ -796,6 +1059,40 @@ function drawRadialLine(context, x, y, angleDeg, length, color, pattern)
 	context.restore();
 }
 
+
+// Draw an arc
+// The start/end angles are in degrees where 0 is straight up (adjusted here).
+// We use the given color and pattern.
+function drawArc(context, x, y, radius, start, end, color, pattern)
+{
+	var srad = degreesToRadians(start-90);
+	var erad = degreesToRadians(end-90);
+	context.save();
+	if (color)
+		context.strokeStyle = color;
+	if (pattern && context.setLineDash)
+		context.setLineDash(pattern);
+	context.beginPath();
+	context.arc(x,y,radius,srad,erad);
+	context.stroke();
+	context.restore();
+}
+
+
+// Draw a line with color and pattern
+function drawLine(context, x1, y1, x2, y2, color, pattern)
+{
+	context.save();
+	if (color)
+		context.strokeStyle = color;
+	if (pattern && context.setLineDash)
+		context.setLineDash(pattern);
+	context.beginPath();
+	context.moveTo(x1, y1);
+	context.lineTo(x2, y2);
+	context.stroke();
+	context.restore();
+}
 /* Same as drawRadialLine, except now drawing a dimension line.
  * This means adding arrowheads and a dimension label.
  * The labelpos is the % of the way from start to end for the
@@ -839,6 +1136,10 @@ function drawRadialDim(context,
 	context.stroke();
 	context.restore();
 }
+
+
+
+
 
 /* This draws an angle dimension line.
  *
@@ -888,43 +1189,6 @@ function drawAngDim(context,
 	var textheight = context.measureText(label).height;
 	context.fillText(label, -textwidth/2, -length*labelpos-5);
 
-	context.restore();
-}
-
-// Draw a circle
-// Nothing exciting here, except we use the given color, fill, and pattern.
-function drawCircle(context, x, y, radius, color, fill, pattern)
-{
-	context.save();
-	if (color)
-		context.strokeStyle = color;
-	if (pattern && context.setLineDash)
-		context.setLineDash(pattern);
-	context.beginPath();
-	context.arc(x,y,radius,0,2*Math.PI);
-	if (fill) {
-		context.fillStyle = fill;
-		context.fill();
-	}
-	context.stroke();
-	context.restore();
-}
-
-// Draw an arc
-// The start/end angles are in degrees where 0 is straight up (adjusted here).
-// We use the given color and pattern.
-function drawArc(context, x, y, radius, start, end, color, pattern)
-{
-	var srad = degreesToRadians(start-90);
-	var erad = degreesToRadians(end-90);
-	context.save();
-	if (color)
-		context.strokeStyle = color;
-	if (pattern && context.setLineDash)
-		context.setLineDash(pattern);
-	context.beginPath();
-	context.arc(x,y,radius,srad,erad);
-	context.stroke();
 	context.restore();
 }
 
@@ -1072,15 +1336,8 @@ function calculateFlywheel(
  */
 function drawFlywheelDemo(canvas, fly) {
 
-	/* Now calculate offsets and a scaling factor so we can draw the
-	 * flywheel the middle of the canvas.  We scale it to 90% of the space
-	 * so that dimension lines can extend beyond the diameter.
-	 */
-	var context = canvas.getContext("2d");
-	var offsetx = canvas.width / 2;
-	var offsety = canvas.height / 2;
-	var fscale = Math.min(canvas.width, canvas.height) * 0.90 /
-					(fly.flywheelRadius * 2);
+	var flyctx = makeDrawingContext(canvas, fly.flywheelRadius);
+	var center = toPoint(0,0);
 
 	// Assigning to canvas.width will clear it
 	canvas.width = canvas.width;
@@ -1089,85 +1346,57 @@ function drawFlywheelDemo(canvas, fly) {
 	//
 	// Shade the flywheel light gray, but fill in the web (out to the rim)
 	// with a white circle.  The hub is also white, but the shaft is dark gray.
-	drawCircle(context, offsetx, offsety, fly.flywheelRadius*fscale,
-				"black", "lightgray", pattern_solid);
-	drawCircle(context, offsetx, offsety, fly.rimRadius*fscale,
-				"black", "white", pattern_solid);
-	drawCircle(context, offsetx, offsety, fly.hubRadius*fscale,
-				"black", "white", pattern_solid);
-	drawCircle(context, offsetx, offsety, fly.shaftRadius*fscale,
-				"black", "gray", pattern_solid);
+
+	drawCircleX(flyctx, center, fly.flywheelRadius, "black", "lightgray", pattern_solid);
+	drawCircleX(flyctx, center, fly.rimRadius, "black", "white", pattern_solid);
+	drawCircleX(flyctx, center, fly.hubRadius, "black", "white", pattern_solid);
+	drawCircleX(flyctx, center, fly.shaftRadius, "black", "gray", pattern_solid);
 	
 	// Draw the radius lines for inner/outer hole pattern
-	drawCircle(context, offsetx, offsety, fly.innerHoleDistance*fscale,
-				"red", fill_none, pattern_dot);
-	drawCircle(context, offsetx, offsety, fly.outerHoleDistance*fscale,
-				"red", fill_none, pattern_dot);
+	drawCircleX(flyctx, center, fly.innerHoleDistance, "red", fill_none, pattern_dot);
+	drawCircleX(flyctx, center, fly.outerHoleDistance, "red", fill_none, pattern_dot);
 
 	// Loop through the spokes and draw stuff using the spkinfo.
 	// Note that the info for spoke position N refers to detail clockwise
 	// from the spoke.  Position N=0 is straight up.
 	var thisangle = 0;
 	for (var spk=0; spk < fly.numSpokes; spk++) {
-		drawRadialLine(context, offsetx, offsety, thisangle,
-				fly.flywheelRadius*fscale*1.05,   		// scale up 10%
+		// Draw spoke centerline (QQQ fix for curved spokes)
+		drawRadialLineX(flyctx, center, thisangle,
+				fly.flywheelRadius*1.05,   		// scale up 5%
 				"black", pattern_dash_dot_dot);
+		
 		// Draw the 4 holes
 		var leftInnerCenter = rotate(fly.leftInnerCenter, thisangle);
-		drawCircle(context,
-					offsetx + leftInnerCenter.x*fscale,
-					offsety - leftInnerCenter.y*fscale, // Y goes down in canvas
-					fly.innerHoleRadius*fscale,
-					"lightgray", fill_none, pattern_solid);
 		var rightInnerCenter = rotate(fly.rightInnerCenter, thisangle);
-		drawCircle(context,
-					offsetx + rightInnerCenter.x*fscale,
-					offsety - rightInnerCenter.y*fscale, // Y goes down in canvas
-					fly.innerHoleRadius*fscale,
-					"lightgray", fill_none, pattern_solid);
 		var leftOuterCenter = rotate(fly.leftOuterCenter, thisangle);
-		drawCircle(context,
-					offsetx + leftOuterCenter.x*fscale,
-					offsety - leftOuterCenter.y*fscale, // Y goes down in canvas
-					fly.outerHoleRadius*fscale,
-					"lightgray", fill_none, pattern_solid);
 		var rightOuterCenter = rotate(fly.rightOuterCenter, thisangle);
-		drawCircle(context,
-					offsetx + rightOuterCenter.x*fscale,
-					offsety - rightOuterCenter.y*fscale, // Y goes down in canvas
-					fly.outerHoleRadius*fscale,
-					"lightgray", fill_none, pattern_solid);
+
+		drawCircleX(flyctx, leftInnerCenter, fly.innerHoleRadius, "lightgray", fill_none, pattern_solid);
+		drawCircleX(flyctx, rightInnerCenter, fly.innerHoleRadius, "lightgray", fill_none, pattern_solid);
+		drawCircleX(flyctx, leftOuterCenter, fly.outerHoleRadius, "lightgray", fill_none, pattern_solid);
+		drawCircleX(flyctx, rightOuterCenter, fly.outerHoleRadius, "lightgray", fill_none, pattern_solid);
+
 		// Draw the outer edge arc
-		drawArc(context, offsetx, offsety,
-					fly.edgeOuterArc.radius*fscale,
+		drawArcX(flyctx, center, fly.edgeOuterArc.radius,
 					fly.edgeOuterArc.startAngle + thisangle,
 					fly.edgeOuterArc.endAngle + thisangle,
 					"black", pattern_solid);
 		// Draw the inner edge arc
-		drawArc(context, offsetx, offsety,
-					fly.edgeInnerArc.radius*fscale,
+		drawArcX(flyctx, center, fly.edgeInnerArc.radius,
 					fly.edgeInnerArc.startAngle + thisangle,
 					fly.edgeInnerArc.endAngle + thisangle,
 					"black", pattern_solid);
-		
+
 		if (fly.curveAngle == 0) {
 			// Draw left/right cut lines
 			var leftCutEdgeStart = rotate(fly.leftCutEdgeStart, thisangle);
 			var leftCutEdgeEnd = rotate(fly.leftCutEdgeEnd, thisangle);
-			drawLine(context,
-					offsetx+leftCutEdgeStart.x*fscale,
-					offsety-leftCutEdgeStart.y*fscale,  // Y goes down
-					offsetx+leftCutEdgeEnd.x*fscale,
-					offsety-leftCutEdgeEnd.y*fscale,		// Y goes down
-					"black", pattern_solid);
+			drawLineX(flyctx, leftCutEdgeStart, leftCutEdgeEnd, "black", pattern_solid);
+			
 			var rightCutEdgeStart = rotate(fly.rightCutEdgeStart, thisangle);
 			var rightCutEdgeEnd = rotate(fly.rightCutEdgeEnd, thisangle);
-			drawLine(context,
-					offsetx+rightCutEdgeStart.x*fscale,
-					offsety-rightCutEdgeStart.y*fscale,  // Y goes down
-					offsetx+rightCutEdgeEnd.x*fscale,
-					offsety-rightCutEdgeEnd.y*fscale,		// Y goes down
-					"black", pattern_solid);
+			drawLineX(flyctx, rightCutEdgeStart, rightCutEdgeEnd, "black", pattern_solid);
 			
 			// Draw arcs to connect cut lines with cut edge arcs
 			// This makes the drawing look nice.  The inner/outer holes
@@ -1179,188 +1408,141 @@ function drawFlywheelDemo(canvas, fly) {
 			var leftHoleCenterAngle = angle(fly.leftInnerCenter, fly.leftOuterCenter);
 			var rightHoleCenterAngle = angle(fly.rightInnerCenter, fly.rightOuterCenter);
 
-			drawArc(context,
-					offsetx + leftOuterCenter.x*fscale,
-					offsety - leftOuterCenter.y*fscale, // Y goes down in canvas
-					fly.outerHoleRadius*fscale,
+			drawArcX(flyctx, leftOuterCenter, fly.outerHoleRadius,
 					leftHoleCenterAngle + thisangle - 90,
 					fly.leftOuterAngle + thisangle,
 					"black", pattern_solid);
-			drawArc(context,
-					offsetx + leftInnerCenter.x*fscale,
-					offsety - leftInnerCenter.y*fscale, // Y goes down in canvas
-					fly.innerHoleRadius*fscale,
+			drawArcX(flyctx, leftInnerCenter, fly.innerHoleRadius,
 					fly.leftInnerAngle + thisangle - 180,
 					leftHoleCenterAngle + thisangle - 90 - 360,
 					"black", pattern_solid);
-			drawArc(context,
-					offsetx + rightOuterCenter.x*fscale,
-					offsety - rightOuterCenter.y*fscale, // Y goes down in canvas
-					fly.outerHoleRadius*fscale,
+			drawArcX(flyctx, rightOuterCenter, fly.outerHoleRadius,
 					fly.rightOuterAngle + thisangle,
 					rightHoleCenterAngle + thisangle - 270,
 					"black", pattern_solid);
-			drawArc(context,
-					offsetx + rightInnerCenter.x*fscale,
-					offsety - rightInnerCenter.y*fscale, // Y goes down in canvas
-					fly.innerHoleRadius*fscale,
+			drawArcX(flyctx, rightInnerCenter, fly.innerHoleRadius,
 					rightHoleCenterAngle + thisangle + 90,
 					fly.rightInnerAngle + thisangle - 180,
 					"black", pattern_solid);
 		}
-
 		thisangle += fly.spokeAngle;
 	}
 }
 
-/* Draw the Flywheel dimension markings.
+/*
+ * Draw the Flywheel dimension markings.
+ * For now we draw the flywheel demo first, dim it, then draw over it.
  *
  */
 function drawFlywheelDims(canvas, fly) {
 
-	/* Now calculate offsets and a scaling factor so we can draw the
-	 * flywheel the middle of the canvas.  We scale it to 90% of the space
-	 * so that dimension lines can extend beyond the diameter.
-	 */
-	var context = canvas.getContext("2d");
-	var offsetx = canvas.width / 2;
-	var offsety = canvas.height / 2;
-	var fradius =  Math.min(canvas.width, canvas.height) * 0.90 / 2;
-	var fscale = fradius / fly.flywheelRadius;
-					
-	/* First, dim the flywheel by drawing a transparent white rectangle over it.  Cool, no? :) */
-	context.save();
-	context.fillStyle="white";
-	context.globalAlpha="0.65";
-	context.fillRect(0,0,canvas.width,canvas.height);
-	context.restore();
-	
-	// Draw the web cutout holes.
-	// There can be 4 holes, but usually the inner holes are aligned so
-	// there are really only 3 holes.  We draw all 4 here because it makes
-	// little difference to draw the same inner circle twice.
-	drawCircle(context,
-				offsetx + fly.leftInnerCenter.x*fscale,
-				offsety - fly.leftInnerCenter.y*fscale, // Y goes down in canvas
-				fly.innerHoleRadius*fscale,
-				"black", fill_none, pattern_solid);
-	drawCircle(context,
-				offsetx + fly.rightInnerCenter.x*fscale,
-				offsety - fly.rightInnerCenter.y*fscale, // Y goes down in canvas
-				fly.innerHoleRadius*fscale,
-				"black", fill_none, pattern_solid);
-	drawCircle(context,
-				offsetx + fly.leftOuterCenter.x*fscale,
-				offsety - fly.leftOuterCenter.y*fscale, // Y goes down in canvas
-				fly.outerHoleRadius*fscale,
-				"black", fill_none, pattern_solid);
-	drawCircle(context,
-				offsetx + fly.rightOuterCenter.x*fscale,
-				offsety - fly.rightOuterCenter.y*fscale, // Y goes down in canvas
-				fly.outerHoleRadius*fscale,
-				"black", fill_none, pattern_solid);
-	// Redraw the hole distance lines in black, but keep them dotted
-	drawCircle(context, offsetx, offsety, fly.innerHoleDistance*fscale,
-				"black", fill_none, pattern_dot);
-	drawCircle(context, offsetx, offsety, fly.outerHoleDistance*fscale,
-				"black", fill_none, pattern_dot);
+	var flyctx = makeDrawingContext(canvas, fly.flywheelRadius);
+	var center = toPoint(0,0);
 
+	/* First, draw dim demo by drawing a transparent white rectangle over it.  Cool, no? :) */
+	drawFlywheelDemo(canvas, fly)
+	flyctx.context.save();
+	flyctx.context.fillStyle="white";
+	flyctx.context.globalAlpha="0.65";
+	flyctx.context.fillRect(0,0,canvas.width,canvas.height);
+	flyctx.context.restore();
+
+	// Draw the web cutout holes for the first spoke only.
+	// The demo drew all of them very lightly since we greyed it.  This highlights 
+	// for dimensions we are adding here.
+	drawCircleX(flyctx, fly.leftInnerCenter, fly.innerHoleRadius, "black", fill_none, pattern_solid);
+	drawCircleX(flyctx, fly.rightInnerCenter, fly.innerHoleRadius, "black", fill_none, pattern_solid);
+	drawCircleX(flyctx, fly.leftOuterCenter, fly.outerHoleRadius, "black", fill_none, pattern_solid);
+	drawCircleX(flyctx, fly.rightOuterCenter, fly.outerHoleRadius, "black", fill_none, pattern_solid);
+
+	// Redraw the hole distance lines in black, but keep them dotted
+	drawCircleX(flyctx, center, fly.innerHoleDistance, "black", fill_none, pattern_dot);
+	drawCircleX(flyctx, center, fly.outerHoleDistance, "black", fill_none, pattern_dot);
 
 	// Radial dimensions from the center of the flywheel.
 	// These are offset from the spokeAngle to get them out of the way of the
 	// detail dimensions for cutting the webs.
 	
 	// Inner hole distance
-	drawRadialDim(context, offsetx, offsety, fly.spokeAngle + 10,
-			0, fly.innerHoleDistance*fscale,
-			fly.innerHoleDistance.toFixed(lendigits), 0.75,
-			"black", pattern_solid);
-	
+	drawRadialDimX(flyctx, center, fly.spokeAngle + 10,
+			0, fly.innerHoleDistance,
+			fly.innerHoleDistance.toFixed(lendigits), 0.75,	"black", pattern_solid);
 	// Outer hole distance
-	drawRadialDim(context, offsetx, offsety, fly.spokeAngle + 22.5,
-			0, fly.outerHoleDistance*fscale,
+	drawRadialDimX(flyctx, center, fly.spokeAngle + 22.5,
+			0, fly.outerHoleDistance,
 			fly.outerHoleDistance.toFixed(lendigits), 0.75,
 			"black", pattern_solid);
-	
 	// Rim radius
-	drawRadialDim(context, offsetx, offsety, fly.spokeAngle + 32.5,
-			0, fly.rimRadius*fscale,
+	drawRadialDimX(flyctx, center, fly.spokeAngle + 32.5,
+			0, fly.rimRadius,
 			fly.rimRadius.toFixed(lendigits), 0.75,
 			"black", pattern_solid);
 	// Rim thickness
 	var rim = fly.flywheelRadius - fly.rimRadius;
-	drawRadialDim(context, offsetx, offsety, fly.spokeAngle + 28,
-			fly.rimRadius*fscale, fly.flywheelRadius*fscale,
+	drawRadialDimX(flyctx, center, fly.spokeAngle + 28,
+			fly.rimRadius, fly.flywheelRadius,
 			rim.toFixed(lendigits), 0.50,
 			"black", pattern_solid);
-
 	// Flywheel Radius dimension (do we need diameter?)
-	drawRadialDim(context, offsetx, offsety, fly.spokeAngle + 40,
-			0, fly.flywheelRadius*fscale,
+	drawRadialDimX(flyctx, center, fly.spokeAngle + 40,
+			0, fly.flywheelRadius,
 			fly.flywheelRadius.toFixed(lendigits), 0.70,
 			"black", pattern_solid);
 	
 	// Hub Radius dimension is only useful as feedback from settings.
 	// I place it as the last dimension and push out the label since I
 	// know space is always going to be tight for the dimension to fit.
-	drawRadialDim(context, offsetx, offsety, fly.spokeAngle + 75,
-			0, fly.hubRadius*fscale,
+	drawRadialDimX(flyctx, center, fly.spokeAngle + 75,
+			0, fly.hubRadius,
 			fly.hubRadius.toFixed(lendigits), 0.80,
 			"black", pattern_solid);
 
 	// Outer hole angle.  Draw this in the first web cutout.
-	drawAngDim(context,
-		offsetx, offsety, 0, fly.leftOuterAngle,
-		fradius * 0.88,
+	drawAngDimX(flyctx, center, 0, fly.leftOuterAngle,
+		fly.flywheelRadius,
 		fly.leftOuterAngle.toFixed(angdigits) + DEGSYM, 0.98,
 		"black", pattern_solid);
 	
 	if (fly.rightOuterAngle > fly.leftOuterAngle) {  // should always be true
-		drawAngDim(context,
-			offsetx, offsety, 0, fly.rightOuterAngle,
-			fradius * 0.95,
+		drawAngDimX(flyctx, center, 0, fly.rightOuterAngle,
+			fly.flywheelRadius * 0.95,
 			fly.rightOuterAngle.toFixed(angdigits) + DEGSYM, 0.98,
 			"black", pattern_solid);
 	}
 	
 	// Inner hole angle.  Draw this in the first web cutout.
-	drawAngDim(context,
-		offsetx, offsety, 0, fly.leftInnerAngle,
-		fradius * 0.50,
+	drawAngDimX(flyctx, center, 0, fly.leftInnerAngle,
+		fly.flywheelRadius * 0.50,
 		fly.leftInnerAngle.toFixed(angdigits) + DEGSYM, 0.98,
 		"black", pattern_solid);
 	
 	if (fly.rightInnerAngle > fly.leftInnerAngle) {
 		// Second Inner hole angle.  Draw this in the first web cutout.
-		drawAngDim(context,
-			offsetx, offsety, 0, fly.rightInnerAngle,
-			fradius * 0.57,
+		drawAngDimX(flyctx, center, 0, fly.rightInnerAngle,
+			fly.flywheelRadius * 0.60,
 			fly.rightInnerAngle.toFixed(angdigits) + DEGSYM, 0.98,
 			"black", pattern_solid);
 	}	
 
 
 	// Flywheel spoke angle.  Draw this in the last web cutout.
-	drawAngDim(context,
-		offsetx, offsety, -fly.spokeAngle, 0,
-		fradius * 0.91,
+	drawAngDimX(flyctx, center, -fly.spokeAngle, 0,
+		fly.flywheelRadius * 0.91,
 		fly.spokeAngle.toFixed(angdigits) + DEGSYM, 0.98,
 		"black", pattern_solid);
 
-	// Add degree marks for each spoke.  Get this out of spkinfo
-	// even though it's easy to calculate.
-	context.save();
+	// Add degree marks for each spoke.
+	flyctx.context.save();
 	var spk;
 	var thisangle = 0;
 	for (spk=0; spk < fly.numSpokes; spk++) {
 		var label = thisangle.toFixed(angdigits) + DEGSYM;
-		var textwidth = context.measureText(label).width;
-		var dest = rotate(toPoint(0, fradius * 1.07), thisangle);
-		context.fillText(label, offsetx+dest.x - textwidth/2, offsety-dest.y);
+		var textwidth = flyctx.context.measureText(label).width;
+		var dest = rotate(toPoint(0, fly.flywheelRadius*flyctx.fscale * 1.07), thisangle);
+		flyctx.context.fillText(label, flyctx.offsetx+dest.x - textwidth/2, flyctx.offsety-dest.y);
 		thisangle += fly.spokeAngle;
 	}
-	context.restore();
-
+	flyctx.context.restore();
 }
 
 //
@@ -1384,6 +1566,10 @@ function drawSpokeStep(step, canvas, fly) {
 	var offsety = canvas.height / 2;
 	var fradius =  Math.min(canvas.width, canvas.height) * 0.90 / 2;
 	var fscale = fradius / fly.flywheelRadius;
+	
+	var flyctx = makeDrawingContext(canvas, fly.flywheelRadius);
+	var center = toPoint(0,0);
+
 	var cutangle = 0;
 	var cutshift = 0;
 	
@@ -1408,19 +1594,14 @@ function drawSpokeStep(step, canvas, fly) {
 	canvas.width = canvas.width;
 	
 	// Draw the circle representing the flywheel
-	drawCircle(context, offsetx, offsety, fly.flywheelRadius*fscale,
-				"black", "lightgray", pattern_solid);
-	drawCircle(context, offsetx, offsety, fly.rimRadius*fscale,
-				"black", "white", pattern_solid);
-	drawCircle(context, offsetx, offsety, fly.hubRadius*fscale,
-				"black", "white", pattern_solid);
-	drawCircle(context, offsetx, offsety, fly.shaftRadius*fscale,
-				"black", "gray", pattern_solid);
+	drawCircleX(flyctx, center, fly.flywheelRadius, "black", "lightgray", pattern_solid);
+	drawCircleX(flyctx, center, fly.rimRadius, "black", "white", pattern_solid);
+	drawCircleX(flyctx, center, fly.hubRadius, "black", "white", pattern_solid);
+	drawCircleX(flyctx, center, fly.shaftRadius, "black", "gray", pattern_solid);
 	
 	// Draw the mill's cut line
-	drawLine(context,
-		offsetx+cutshift*fscale, 0, offsetx+cutshift*fscale, canvas.height,
-		"blue", pattern_solid);
+	drawLineX(flyctx, toPoint(cutshift,0), toPoint(cutshift, fly.flywheelRadius*1.10), "blue", pattern_solid);
+
 	context.save();
 	// Draw a label saying it is the mill's cut line
 	context.translate(offsetx+cutshift*fscale,offsety);	// Now 0,0 is the center.
