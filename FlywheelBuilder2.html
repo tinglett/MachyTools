@@ -74,7 +74,6 @@ Presets:  <select id="flywheelPresets" onchange="selectedPreset()">
 <input id="urlhash" value="" hidden>
 
 Curve Angle: <input id="curveAngle" value="0">
-Curve Adjust: <input id="curveAdjust" value="0">
 
 
 <table style="text-align: left">
@@ -453,7 +452,6 @@ function buildFlywheels() {
 	var outholedist = parseFloat(document.getElementById("flywheelOuterHoleDistance").value);
 	var outholeang = parseFloat(document.getElementById("flywheelOuterHoleAngle").value);
 	var curveangle = parseFloat(document.getElementById("curveAngle").value);
-	var curveadjust = parseFloat(document.getElementById("curveAdjust").value);
 	
 	// Some checks to "fix" invalid flywheels.  This doesn't cover them
 	// all, by any means!
@@ -493,7 +491,7 @@ function buildFlywheels() {
 	var canvasdims = document.getElementById("flywheelDimsCanvas");
 	drawFlywheelDims(canvasdims, fly);
 	var canvasdebug = document.getElementById("debugCanvas");
-	debugFlywheel(canvasdebug, fly, curveangle, curveadjust);
+	debugFlywheel(canvasdebug, fly, curveangle, -curveangle/3);
 
 	//
 	// Now do a pile of document fixups to personalize the web page
