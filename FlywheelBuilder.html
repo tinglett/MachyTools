@@ -491,7 +491,7 @@ function buildFlywheels() {
 	var canvasdims = document.getElementById("flywheelDimsCanvas");
 	drawFlywheelDims(canvasdims, fly);
 	var canvasdebug = document.getElementById("debugCanvas");
-	debugFlywheel(canvasdebug, fly, curveangle, -curveangle/3);
+	debugFlywheel(canvasdebug, fly, curveangle);
 
 	//
 	// Now do a pile of document fixups to personalize the web page
@@ -1485,7 +1485,7 @@ function drawSpokeStep(step, canvas, fly) {
 
 }
 
-function debugFlywheel(canvas, fly, curveangle, curveadjust) {
+function debugFlywheel(canvas, fly, curveangle) {
 	var flyctx = makeDrawingContext(canvas, fly.flywheelRadius);
 	var center = toPoint(0,0);
 
@@ -1556,7 +1556,15 @@ function debugFlywheel(canvas, fly, curveangle, curveadjust) {
 		
 		var ptA = midpoint(curvePrevRightOuterCenter, curveLeftOuterCenter);
 		var ptB = midpoint(prevRightInnerCenter, leftInnerCenter);
-		var ptC = toPoint(0,0);  // center for now
+		// Try adjusting point C.
+		// We do this to allow the arc to spring a little so it isn't constrained hard to the center of the hub.
+		//
+		// We assume the spoke will always curve to the right (positive angle).
+		// We also assume a reasonable angle.  It can be perhaps up to 75% of the spokeAngle.  Maybe a bit more.
+		// We adjust point C to the left of the center of the hub.  We use the curveangle as a ratio of the spokeAngle.
+		// At the full spokeAngle we will shift to the left of the center 1/2 of the innerHoleDistance.  This can go further
+		// if the curveangle is allowed to exceed the spokeAngle.
+		var ptC = toPoint(-(fly.innerHoleDistance/2)*(curveangle/fly.spokeAngle),0);
 		
 		// Draw these points for debug.  To make 1 pixel radius we use 1/fscale
 		drawCircle(flyctx,	ptA, 1/flyctx.fscale, "black", "black", pattern_solid);
