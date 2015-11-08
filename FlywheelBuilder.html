@@ -25,7 +25,7 @@ table, th, td {
 </head>
 
 <body onLoad="buildFlywheels()">
-<h2>Flywheel builder v1.5.1</h2>
+<h2>Flywheel builder v1.5.2</h2>
 <form name="flywheelParms" onChange="buildFlywheels()">
 <!-- Use a select for spokes so crazy numbers (like fractions) can't happen -->
 <canvas id="flywheelDemoCanvas" width="400" height="400"
@@ -1504,7 +1504,6 @@ function debugFlywheel(canvas, fly, curveangle) {
 	var flyctx = makeDrawingContext(canvas, fly.flywheelRadius);
 	var center = toPoint(0,0);
 
-	console.log("curveangle=" + curveangle);
 	// Assigning to canvas.width will clear it
 	canvas.width = canvas.width;
 
@@ -1517,16 +1516,15 @@ function debugFlywheel(canvas, fly, curveangle) {
 	drawCircle(flyctx, center, fly.hubRadius, "black", "white", pattern_solid);
 	drawCircle(flyctx, center, fly.shaftRadius, "black", "gray", pattern_solid);
 
-	
 	// Draw the radius lines for inner/outer hole pattern
 	drawCircle(flyctx, center, fly.innerHoleDistance, "red", fill_none, pattern_dot);
 	drawCircle(flyctx, center, fly.outerHoleDistance, "red", fill_none, pattern_dot);
-	
+		
 	// Loop through the spokes and draw stuff using the spkinfo.
 	// Note that the info for spoke position N refers to detail clockwise
 	// from the spoke.  Position N=0 is straight up.
 	var thisangle = 0;
-	for (var spk=0; spk < fly.numSpokes; spk++) {		
+	for (var spk=0; spk < 1; spk++) {		// only draw spoke 0 for now.  Otherwise we draw over the prev spoke.
 		// Outer holes need to be rotated for curved spokes.
 		// calculateFlywheel should do this, but we'll adjust for debug.
 		var curveRightOuterCenter = rotate(fly.rightOuterCenter, thisangle+curveangle);
@@ -1534,7 +1532,7 @@ function debugFlywheel(canvas, fly, curveangle) {
 		// No curve angle added on the inner centers
 		var curveRightInnerCenter = rotate(fly.rightInnerCenter, thisangle);
 		var curveLeftInnerCenter = rotate(fly.leftInnerCenter, thisangle);
-		// Draw the 4 holes.  This draws in both sides of the spoke (left is negative rotation)
+		// Draw the 4 holes.
 		drawCircle(flyctx, curveLeftOuterCenter, fly.outerHoleRadius, "lightgray", fill_none, pattern_solid);
 		drawCircle(flyctx, curveRightOuterCenter, fly.outerHoleRadius, "lightgray", fill_none, pattern_solid);
 		drawCircle(flyctx, curveLeftInnerCenter, fly.innerHoleRadius, "lightgray", fill_none, pattern_solid);
@@ -1603,11 +1601,17 @@ function debugFlywheel(canvas, fly, curveangle) {
 		h = (1/2)*((a*a+b*b)*(f-d) + (c*c+d*d)*(b-f) + (e*e+f*f)*(d-b)) / (a*(f-d) + c*(b-f) + e*(d-b));
 		k = (1/2)*((a*a+b*b)*(e-c) + (c*c+d*d)*(a-e) + (e*e+f*f)*(c-a)) / (b*(e-c) + d*(a-e) + f*(c-a));
 		r = Math.sqrt((a-h)*(a-h) + (b-k)*(b-k));
-		if (spk == 0) {
-			console.log("  radius=" + r + "  k=" + k + "  h=" + h);
-			drawCircle(flyctx,	toPoint(h,k), 2/flyctx.fscale, "blue", "blue", pattern_solid);
-			drawCircle(flyctx, toPoint(h,k), r, "blue", fill_none, pattern_dot);
-		}
+		
+		// QQQ:   Save r and toPoint(h,k) as the spoke arc reference
+		var spokecenterarc = toPoint(h,k);
+		drawCircle(flyctx,	spokecenterarc, 2/flyctx.fscale, "blue", "blue", pattern_solid);
+		// drawCircle(flyctx, toPoint(h,k), r, "blue", fill_none, pattern_dot);
+		// Adding 30 degrees is a hack to extend the spoke centerline
+		drawArc(flyctx, spokecenterarc, r,
+				angle(spokecenterarc, ptC), angle(spokecenterarc, ptA)+30,
+				"black", pattern_dash_dot_dot)
+
+
 		
 		// Now we have our radius.  We'll use it to calculate the center
 		// point for the two arcs we need (two cut sides of the spoke).
@@ -1646,11 +1650,11 @@ function debugFlywheel(canvas, fly, curveangle) {
 		var ang = angle(curveRightInnerCenter, curveRightOuterCenter);
 		var xy = rotate(toPoint(a,h), ang+90);
 		var innerarc = addPoints(xy, curveRightOuterCenter);
-		if (spk == 0) {
-			console.log("   ang=" + ang + "  vertex=" + ptStr(toPoint(a,h)) + "  xy=" + ptStr(xy) + "  innerarc=" + ptStr(innerarc));
-			drawCircle(flyctx, innerarc, 2/flyctx.fscale, "green", "green", pattern_solid);
-			drawCircle(flyctx,	innerarc, r, "green", fill_none, pattern_dot);
-		}
+		drawCircle(flyctx, innerarc, 2/flyctx.fscale, "green", "green", pattern_solid);
+		// drawCircle(flyctx,	innerarc, r, "green", fill_none, pattern_dot);
+		drawArc(flyctx, innerarc, r,
+				angle(innerarc, curveRightInnerCenter), angle(innerarc, curveRightOuterCenter),
+				"black", pattern_solid)
 		
 		// The other side of the spoke is almost the same.
 		// However, we use the prev holes, of course, and we must ADD to get
@@ -1664,12 +1668,30 @@ function debugFlywheel(canvas, fly, curveangle) {
 		var ang = angle(curveLeftInnerCenter, curveLeftOuterCenter);
 		var xy = rotate(toPoint(a,h), ang+90);
 		var outerarc = addPoints(xy, curveLeftOuterCenter);
-		if (spk == 0) {
-			console.log("   ang=" + ang + "  vertex=" + ptStr(toPoint(a,h)) + "  xy=" + ptStr(xy) + "  outerarc=" + ptStr(outerarc));
-			drawCircle(flyctx, outerarc, 2/flyctx.fscale, "orange", "orange", pattern_solid);
-			drawCircle(flyctx,	outerarc, r, "orange", fill_none, pattern_dot);
-		}
+		drawCircle(flyctx, outerarc, 2/flyctx.fscale, "orange", "orange", pattern_solid);
+		// drawCircle(flyctx,	outerarc, r, "orange", fill_none, pattern_dot);
+		drawArc(flyctx, outerarc, r,
+				angle(outerarc, curveLeftInnerCenter), angle(outerarc, curveLeftOuterCenter),
+				"black", pattern_solid)
 
+		// Complete the edges of the spoke holes with arcs
+		drawArc(flyctx, curveRightOuterCenter, fly.outerHoleRadius,
+				angle(innerarc, curveRightOuterCenter),
+				fly.edgeOuterArc.startAngle + thisangle + curveangle,
+				"black", pattern_solid);
+		drawArc(flyctx, curveRightInnerCenter, fly.innerHoleRadius,
+				fly.edgeInnerArc.startAngle + thisangle + 180,
+				angle(curveRightInnerCenter, innerarc) + 180,
+				"black", pattern_solid);
+		drawArc(flyctx, curveLeftOuterCenter, fly.outerHoleRadius,
+				fly.edgeOuterArc.endAngle + thisangle + curveangle - fly.spokeAngle,
+				angle(curveLeftOuterCenter, outerarc),
+				"black", pattern_solid);
+		drawArc(flyctx, curveLeftInnerCenter, fly.innerHoleRadius,
+					angle(curveLeftInnerCenter, innerarc),
+					fly.edgeInnerArc.endAngle + thisangle - fly.spokeAngle + 180,
+					"black", pattern_solid);
+					
 		thisangle += fly.spokeAngle;
 	}
 }
