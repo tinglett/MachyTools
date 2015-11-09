@@ -25,7 +25,7 @@ table, th, td {
 </head>
 
 <body onLoad="buildFlywheels()">
-<h2>Flywheel builder v1.5.2</h2>
+<h2>Flywheel builder v1.5.3</h2>
 <form name="flywheelParms" onChange="buildFlywheels()">
 <!-- Use a select for spokes so crazy numbers (like fractions) can't happen -->
 <canvas id="flywheelDemoCanvas" width="400" height="400"
@@ -33,9 +33,6 @@ table, th, td {
 Your browser does not support the canvas element.  Sorry, this web page won't work for you.
 </canvas>
 <canvas id="flywheelDimsCanvas" width="400" height="400"
-  style="border:1px solid #d3d3d3;">
-</canvas>
-<canvas id="debugCanvas" width="400" height="400"
   style="border:1px solid #d3d3d3;">
 </canvas>
 <p><b>Dimensions:   </b>
@@ -51,30 +48,26 @@ Units: <select id="flywheelUnits">
 		</select>
 Presets:  <select id="flywheelPresets" onchange="selectedPreset()">
 		<option value="">Choose a Pre-designed Flywheel</option>
-		<option value="spokes=6&units=in&dia=2.5&rim=0.25&hub=0.500&shaft=0.250&india=0.250&outdia=0.125&indis=0.438&outdis=0.875&inang=30.0&outang=8.2">
+		<option value="spokes=6&units=in&dia=2.5&rim=0.25&hub=0.500&shaft=0.250&india=0.250&outdia=0.125&indis=0.438&outdis=0.875&inang=30.0&outang=8.2&curve=0">
 		2.5" Diameter 6-spoke from Elmers #24 Beam</option>
-		<option value="spokes=4&units=in&dia=3.0&rim=0.375&hub=0.625&shaft=0.250&india=0.250&outdia=0.250&indis=0.438&outdis=1.000&inang=32.0&outang=12.0">
+		<option value="spokes=4&units=in&dia=3.0&rim=0.375&hub=0.625&shaft=0.250&india=0.250&outdia=0.250&indis=0.438&outdis=1.000&inang=32.0&outang=12.0&curve=0">
 		3" Diameter 4-spoke Simple</option>
-		<option value="spokes=6&units=in&dia=3.0&rim=0.375&hub=0.500&shaft=0.250&india=0.188&outdia=0.125&indis=0.438&outdis=1.000&inang=30.0&outang=9.0">
+		<option value="spokes=6&units=in&dia=3.0&rim=0.375&hub=0.500&shaft=0.250&india=0.188&outdia=0.125&indis=0.438&outdis=1.000&inang=30.0&outang=9.0&curve=0">
 		3" Diameter 6-spoke from Elmer's #5 Geared</option>
-		<option value="spokes=5&units=in&dia=4.0&rim=0.312&hub=0.625&shaft=0.313&india=0.375&outdia=0.188&indis=0.625&outdis=1.438&inang=36.0&outang=8.0">
+		<option value="spokes=5&units=in&dia=4.0&rim=0.312&hub=0.625&shaft=0.313&india=0.375&outdia=0.188&indis=0.625&outdis=1.438&inang=36.0&outang=8.0&curve=0">
 		4" Diameter 5-spoke Thick</option>
-		<option value="spokes=5&units=in&dia=4.0&rim=0.188&hub=0.625&shaft=0.313&india=0.375&outdia=0.188&indis=0.625&outdis=1.625&inang=36.0&outang=8.0">
+		<option value="spokes=5&units=in&dia=4.0&rim=0.188&hub=0.625&shaft=0.313&india=0.375&outdia=0.188&indis=0.625&outdis=1.625&inang=36.0&outang=8.0&curve=0">
 		4" Diameter 5-spoke Thin</option>
-		<option value="spokes=6&units=in&dia=5.0&rim=0.094&hub=0.875&shaft=0.375&india=0.625&outdia=0.188&indis=0.875&outdis=2.125&inang=30.0&outang=6.0">
+		<option value="spokes=6&units=in&dia=5.0&rim=0.094&hub=0.875&shaft=0.375&india=0.625&outdia=0.188&indis=0.875&outdis=2.125&inang=30.0&outang=6.0&curve=0">
 		5.0" 6-spoke Easton &amp; Anderson Grasshopper</option>
-		<option value="spokes=6&units=in&dia=6.5&rim=0.250&hub=0.625&shaft=0.313&india=0.25&outdia=0.188&indis=0.625&outdis=2.75&inang=24&outang=4.6">
+		<option value="spokes=6&units=in&dia=6.5&rim=0.250&hub=0.625&shaft=0.313&india=0.25&outdia=0.188&indis=0.625&outdis=2.75&inang=24&outang=4.6&curve=0">
 		6.5" Diameter 6-spoke Thin</option>
-
 
 		</select>
 		
 <input id="prevFlywheelSpokes" value="0" hidden>
 <input id="prevFlywheelUnits" value="none" hidden>
 <input id="urlhash" value="" hidden>
-
-Curve Angle: <input id="curveAngle" value="0">
-
 
 <table style="text-align: left">
 <tr><td>Flywheel diameter </td> <td><input id="flywheelDiameter" type="text" value="4.000" size="4" maxlength="8"></td>
@@ -88,6 +81,8 @@ Curve Angle: <input id="curveAngle" value="0">
 <tr><td>Inner hole angle</td> <td><input id="flywheelInnerHoleAngle" type="text" value="36.0" size="4" maxlength="8"></td>
     <td>Outer hole angle</td> <td><input id="flywheelOuterHoleAngle" type="text" value="8.0" size="4" maxlength="8"></td></tr>
 </table>
+<br>
+Curve Angle: <input id="flywheelCurveAngle" type="text" value="0" size="3" maxlength="8">
 </form>
 
 <p>
@@ -296,7 +291,7 @@ var lendigits = 0;		// will be 3 for inches and 2 for mm
  * them (and is used by the code).
  */
  var urlstatemap = {
- 	 // map 3-letter abbreviation to HTML form id names.
+ 	 // map short abbreviations to HTML form id names.
  	 spokes: "flywheelSpokes",
  	 units: "flywheelUnits",
  	 dia: "flywheelDiameter",
@@ -309,6 +304,7 @@ var lendigits = 0;		// will be 3 for inches and 2 for mm
  	 outdis: "flywheelOuterHoleDistance",
  	 inang: "flywheelInnerHoleAngle",
  	 outang: "flywheelOuterHoleAngle",
+ 	 curve: "flywheelCurveAngle",
  };
  
  
@@ -452,7 +448,7 @@ function buildFlywheels() {
 	var outholedia = parseFloat(document.getElementById("flywheelOuterHoleDiameter").value);
 	var outholedist = parseFloat(document.getElementById("flywheelOuterHoleDistance").value);
 	var outholeang = parseFloat(document.getElementById("flywheelOuterHoleAngle").value);
-	var curveangle = parseFloat(document.getElementById("curveAngle").value);
+	var curveangle = parseFloat(document.getElementById("flywheelCurveAngle").value);
 	
 	// Some checks to "fix" invalid flywheels.  This doesn't cover them
 	// all, by any means!
@@ -491,9 +487,8 @@ function buildFlywheels() {
 	drawFlywheelDemo(canvas, fly);
 	var canvasdims = document.getElementById("flywheelDimsCanvas");
 	drawFlywheelDims(canvasdims, fly);
-	var canvasdebug = document.getElementById("debugCanvas");
-	debugFlywheel(canvasdebug, fly, curveangle);
 
+	if (fly.curveAngle == 0) {  // QQQ:  fix this for curved angles.
 	//
 	// Now do a pile of document fixups to personalize the web page
 	// instructions to the flywheel design
@@ -535,6 +530,7 @@ function buildFlywheels() {
 	var outerSpokeThickness = (fly.rightOuterCenter.x - fly.outerHoleRadius)*2;
 	InnerThick.innerHTML = innerSpokeThickness.toFixed(lendigits);
 	OuterThick.innerHTML = outerSpokeThickness.toFixed(lendigits);
+	}
 	
 	//
 	// Now update cutting schedule tables.
@@ -644,12 +640,14 @@ function buildFlywheels() {
 	document.getElementById("outTabDia").innerHTML = (fly.outerHoleRadius*2).toFixed(lendigits);
 	document.getElementById("outTabDist").innerHTML = fly.outerHoleDistance.toFixed(lendigits);
 	
+	if (fly.curveAngle == 0) { // QQQ: fix for curves
 	// Now fill in the instSpokeStep*Canvas figures
 	drawSpokeStep(1, document.getElementById("instSpokeStep1Canvas"), fly);
 	drawSpokeStep(2, document.getElementById("instSpokeStep2Canvas"), fly);
 	drawSpokeStep(3, document.getElementById("instSpokeStep3Canvas"), fly);
 	drawSpokeStep(4, document.getElementById("instSpokeStep4Canvas"), fly);
-
+	}
+	
 	// Now update the # (hash) so the URL matches the inputs
 	// Thus, it can be bookmarked with the current settings.
 	location.hash = genhash();
@@ -1092,43 +1090,12 @@ function calculateFlywheel(
 	var outpoint = toPoint(0,outerHoleDistance);
 	fly.rightInnerAngle = innerHoleAngle;
 	fly.rightInnerCenter = rotate(inpoint, fly.rightInnerAngle);
-	fly.rightOuterAngle = outerHoleAngle;
+	fly.rightOuterAngle = outerHoleAngle + curveAngle;		// Outer hole is twisted for curved spokes
 	fly.rightOuterCenter = rotate(outpoint, fly.rightOuterAngle);
 	fly.leftInnerAngle = -innerHoleAngle;
 	fly.leftInnerCenter = rotate(inpoint, fly.leftInnerAngle);
-	fly.leftOuterAngle = -outerHoleAngle;
+	fly.leftOuterAngle = -outerHoleAngle + curveAngle;		// Outer hole is twisted for curved spokes
 	fly.leftOuterCenter = rotate(outpoint, fly.leftOuterAngle);
-
-
-	// Now the tricky bits.  Calculate the right and left cut lines.
-	// We'll produce x,y start/end points as well as length and angle.
-	// First calc the angles between the center points of inner/outer holes.
-	var rightHoleCenterAngle = angle(fly.rightInnerCenter, fly.rightOuterCenter);
-	var rightHoleDistance = distance(fly.rightInnerCenter, fly.rightOuterCenter);
-	var leftHoleCenterAngle = angle(fly.leftInnerCenter, fly.leftOuterCenter);
-	var leftHoleDistance = distance(fly.leftInnerCenter, fly.leftOuterCenter);
-
-	// Next we need to work with the coords and angle formed because the
-	// inner/outer holes might be different diameter.  Let's temporarily
-	// do calculations with a Y axis straight through the center points
-	// of the inner/outer holes where Y=0 is the center of the inner hole.
-	var rightStart = rotate(toPoint(-fly.innerHoleRadius, 0), rightHoleCenterAngle);
-	var rightEnd = rotate(toPoint(-fly.outerHoleRadius, rightHoleDistance), rightHoleCenterAngle);
-	var leftStart = rotate(toPoint(fly.innerHoleRadius, 0), leftHoleCenterAngle);
-	var leftEnd = rotate(toPoint(fly.outerHoleRadius, leftHoleDistance), leftHoleCenterAngle);
-		
-	// The positions are currently relative to 0,0 in those
-	// calculations which was the center of the inner hole.  Adjust.
-	fly.rightCutEdgeStart = addPoints(fly.rightInnerCenter, rightStart);
-	fly.rightCutEdgeEnd = addPoints(fly.rightInnerCenter, rightEnd);
-	fly.rightCutAngle = angle(fly.rightCutEdgeStart, fly.rightCutEdgeEnd);
-	fly.leftCutEdgeStart = addPoints(fly.leftInnerCenter, leftStart);
-	fly.leftCutEdgeEnd = addPoints(fly.leftInnerCenter, leftEnd);
-	fly.leftCutAngle = angle(fly.leftCutEdgeStart, fly.leftCutEdgeEnd);
-
-	// Lock the angles in to rounded numbers.
-	fly.rightCutAngle = fly.rightCutAngle.toFixed(angdigits);
-	fly.leftCutAngle = fly.leftCutAngle.toFixed(angdigits);
 
 	// Calculate drawing data for the web cutout.
 	// This web is to the right (clockwise) of the spoke.
@@ -1145,26 +1112,265 @@ function calculateFlywheel(
 	fly.edgeInnerArc.radius = innerHoleDistance - innerHoleRadius;
 	fly.edgeInnerArc.startAngle = fly.rightInnerAngle;
 	fly.edgeInnerArc.endAngle = fly.spokeAngle + fly.leftInnerAngle;
-
-	// Now calculate 4 drawing arcs for the remaining edges of the
+	// We will calculate 4 drawing arcs for the remaining edges of the
 	// holes that were drilled.  These aren't useful on the mill, but
 	// are useful when drawing the flywheel.  We already have recorded
 	// the arc centers and radii as center/radius of each hole, so all
 	// we need to record now is the start/end angles of each arc.
-	// (Note:  I'm cheating in calculations here a little, not accounting
-	// for the angle caused by the differing hole sizes)
+	
+	// Create the objects first.  They have start/end angles.
+	// The centers and radii are properties of the holes.
+	// The values are dependent on curve vs. straight so will fill in below.
 	fly.rightOuterHoleArc = {};
-	fly.rightOuterHoleArc.startAngle = rightHoleCenterAngle - 90;
-	fly.rightOuterHoleArc.endAngle = fly.rightOuterAngle;
 	fly.rightInnerHoleArc = {};
-	fly.rightInnerHoleArc.startAngle = fly.rightInnerAngle - 180;
-	fly.rightInnerHoleArc.endAngle = rightHoleCenterAngle - 90 - 360;
 	fly.leftOuterHoleArc = {};
-	fly.leftOuterHoleArc.startAngle = fly.leftOuterAngle;
-	fly.leftOuterHoleArc.endAngle = leftHoleCenterAngle - 270;
 	fly.leftInnerHoleArc = {};
-	fly.leftInnerHoleArc.startAngle = leftHoleCenterAngle + 90;
-	fly.leftInnerHoleArc.endAngle = fly.leftInnerAngle - 180;
+
+	if (fly.curveAngle) {
+		// Curved spokes.
+		//
+		// Note that a curveAngle cannot be negative.
+		// The spokes always curve in the clockwise direction.
+		//
+		// This produces the following calculated values for cutting curved spokes:
+		//
+		//		fly.curveAngle				input data (> 0 indicated curved spokes)
+		//		fly.curveRadius				all cuts are this radius
+		//		fly.curveSpokeCenter		point (x,y)  center of arc for centerline of spoke
+		//		fly.curveSpokeStartAngle
+		//		fly.curveSpokeEndAngle
+		//		fly.curveCutRightCenter		point (x,y)
+		//		fly.curveCutRightStartAngle
+		//		fly.curveCutRightEndAngle
+		//		fly.curveCutLeftCenter		point (x,y)
+		//		fly.curveCutLeftStartAngle
+		//		fly.curveCutLeftEndAngle
+		//		fly.curveSpokeCenterlineEndAngle for bounding the centerline
+
+		// Start by forming an arc from 3 points:
+		//   A: The midpoint of the line between the right outer hole center
+		//		and the left outer hole center of the previous spoke
+		//   B: The midpoint of the line between the right inner hole center
+		// 		and the left inner hole center of the previous spoke
+		//   C: The center of the flywheel (this is "adjusted" to the left).
+		// This makes a nicely shaped spoke.  The radius of this arc is what
+		// we really need.  When we calculate the arcs for cutting, we'll use
+		// this radius to compute an arc that is tangent to the inner/outer
+		// holes so we get a nice transition.
+		
+		var ptA = midpoint(fly.leftOuterCenter, fly.rightOuterCenter);
+		var ptB = midpoint(fly.leftInnerCenter, fly.rightInnerCenter);
+		// Point C could be 0,0 which is always the hub center, but we "adjust" it to the left (negative).
+		// We adjust point C to the right of the center of the hub.  We use the curveangle as a ratio of the spokeAngle.
+		// At the full spokeAngle we will shift to the right of the center 1/2 of the innerHoleDistance.  This can go further
+		// if the curveangle is allowed to exceed the spokeAngle.  We don't change Y -- it stays at zero.
+		var ptC = toPoint(-(fly.innerHoleDistance/2)*(fly.curveAngle/fly.spokeAngle), 0);
+				
+		// Now calculate the radius given these 3 points.
+		//
+		// This arc will form the centerline of the spoke.  It has a center, radius, and start/end angle
+		//
+		// There are a couple ways to do this.  You can calculate perpendicular
+		// lines off the two line segments beteen the three points and where
+		// these perpendicular lines intersect is the center.
+		//
+		// The other way is to use the equation of a circle:
+		//    (x-h)^2 + (y-k)^2 = r^2    (where ^2 represents "squared")
+		// here we have 3 sets of x,y values, but h, k and r are unknown.
+		// Since we have 3 sets, and 3 variables, we can solve.   This
+		// produces a lot of algebra rearranging that I won't document here.
+		// See http://2000clicks.com/mathhelp/GeometryConicSectionCircleEquationGivenThreePoints.aspx
+		// and I'll stick to their variable names so it makes sense to the reader.
+		var a=ptA.x, b=ptA.y, c=ptB.x, d=ptB.y, e=ptC.x, f=ptC.y;
+		var h, k, r;
+		h = (1/2)*((a*a+b*b)*(f-d) + (c*c+d*d)*(b-f) + (e*e+f*f)*(d-b)) / (a*(f-d) + c*(b-f) + e*(d-b));
+		k = (1/2)*((a*a+b*b)*(e-c) + (c*c+d*d)*(a-e) + (e*e+f*f)*(c-a)) / (b*(e-c) + d*(a-e) + f*(c-a));
+		r = Math.sqrt((a-h)*(a-h) + (b-k)*(b-k));
+		
+		fly.curveRadius = r;
+		fly.curveSpokeCenter = toPoint(h,k);
+		fly.curveSpokeStartAngle = angle(fly.curveSpokeCenter, ptC);
+		fly.curveSpokeEndAngle = angle(fly.curveSpokeCenter, ptA);
+		
+		// Now we have our radius.  We'll use it to calculate the center
+		// point for the two arcs we need (two cut sides of the spoke).
+		//
+		// We want this arc to be tangent to the inner/outer hole edges.
+		// The observation is that the radius of the arc goes through the
+		// center of each of these circles.
+		//
+		// We also know the radius of both inner and outer holes, so we
+		// can subtract each of those from the arc radius to give us r1 and r2.
+		// These are lengths of two sides of a triangle (two sides of the "pie"
+		// that is formed by the arc.  The third side's length is the distance
+		// between centers of the inner/outer holes.  Call this distance d.
+		//
+		//							  o (0,d) outer hole center
+		//					          |\
+		//					          | \
+		//					          |  \r2
+		//					          |   \
+		//					         b|    \
+		//					          |   h \
+		//					          |------+ (x,y)
+		//					          |     /
+		//					         a|   / r1
+		//                            | /
+		//			------------------O--------------------- (temp rotated X,Y axes)
+		//                            | (0,0) inner hole center
+		//
+		
+		// Do these calculations for the right side first.
+		// Here, the curve radius must extend from (x,y) to the other side of both inner
+		// and outer holes.  So if r is this full radius we must subtrace each hole's
+		// radius to get r1 and r2.
+		//
+		// Let's have this triangle unrotated with the outer hole center vertex
+		// positioned at 0,0.  We calculated the base length as d, so the inner
+		// hole vertex on the left is d,0.   Drop a line perpendicular to the
+		// base and we get two left triangles.  The lengths a, b, and h are
+		// unknown.  We know d=a+b, so let's find them.  When we do, we can
+		// use (a,h) to represent x,y.  All we need to do is rotate the triangle
+		// and then shift it by the original coords for the right vertex.
+		var d = distance(fly.rightInnerCenter, fly.rightOuterCenter);
+		var r1 = fly.curveRadius - fly.innerHoleRadius;
+		var r2 = fly.curveRadius - fly.outerHoleRadius;
+		var a = (d*d + r1*r1 - r2*r2) / (2*d);
+		var h = Math.sqrt(r1*r1 - a*a);	// Pythagorean Theorem to calc the 3rd side.
+
+		// Our point x,y above is really (h,a).  But we need to rotate it back
+		// and shift it properly because it was relative to the inner hole center.
+		var ang = angle(fly.rightInnerCenter, fly.rightOuterCenter);
+		var xy = rotate(toPoint(h,a), ang);
+		fly.curveCutRightCenter = addPoints(xy, fly.rightInnerCenter);
+		fly.curveCutRightStartAngle = angle(fly.curveCutRightCenter, fly.rightInnerCenter);
+		fly.curveCutRightEndAngle = angle(fly.curveCutRightCenter, fly.rightOuterCenter);
+		
+		// Now do calculations for the left side.
+		// The left side is the "far" side of spoke, and therefore goes to the near side
+		// of the inner and outer hole radii.  Other than a sign change, it is the same math.
+
+		// The other side of the spoke is almost the same.
+		// However, we use the prev holes, of course, and we must ADD to get
+		// r1, r2 since we are on the near side of the holes.
+		var d = distance(fly.leftInnerCenter, fly.leftOuterCenter);
+		var r1 = fly.curveRadius + fly.innerHoleRadius;
+		var r2 = fly.curveRadius + fly.outerHoleRadius;
+		var a = (d*d + r1*r1 - r2*r2) / (2*d);
+		var h = Math.sqrt(r1*r1 - a*a); // Pythagorean Theorem to calc the 3rd side.
+
+		var ang = angle(fly.leftInnerCenter, fly.leftOuterCenter);
+		var xy = rotate(toPoint(h,a), ang);
+		fly.curveCutLeftCenter = addPoints(xy, fly.leftInnerCenter);
+		fly.curveCutLeftStartAngle = angle(fly.curveCutLeftCenter, fly.leftInnerCenter);
+		fly.curveCutLeftEndAngle = angle(fly.curveCutLeftCenter, fly.leftOuterCenter);
+		
+		// Next calculate the length of the centerline for drawing purposes
+		//
+		// Since this is a curved spoke, we really need an end-arc angle so it extends 5% beyond
+		// edge of the flywheel (as with the straight spoke where the math is trivial)
+		// To do this, we calculate the intersection of the circle 5% bigger than the flywheel
+		// and the circle that represents the centerline.
+		// See http://paulbourke.net/geometry/circlesphere/ for an explanation.  P0 represents the
+		// center of the flywheel (always 0,0 which is nice), and P1 represents the center of the
+		// centerline arc (fly.curveSpokeCenter).  We need to calculate P2, and this leads to P3.
+		// See the webpage.  The math here tries to reflect that page is much as possible.
+		var P0 = toPoint(0,0);
+		var P1 = fly.curveSpokeCenter;
+		var d = distance(P0, P1);
+		var r0 = fly.flywheelRadius*1.05;		// 5% bigger than flywheel radius
+		var r1 = fly.curveRadius;
+		var a = (r0*r0 - r1*r1 + d*d)/(2*d);	// distance from P0 to P2 heading on the slope toward P1.
+		var h = Math.sqrt(r0*r0 - a*a);			// Pythagorean formula to get 3rd side of the triangle		
+		var x2 = (a * P1.x)/d;					// simple because P0 (x0,y0) is 0,0 center of flywheel
+		var y2 = (a * P1.y)/d;
+		var x3 = x2 - (h * P1.y)/d;				// also simple due to 0,0
+		var y3 = y2 + (h * P1.x)/d;
+		fly.curveSpokeCenterlineEndAngle = angle(fly.curveSpokeCenter, toPoint(x3,y3));
+		
+
+		// Finally, fill in the drawing arcs.  The objects have been created earlier.
+		fly.rightOuterHoleArc.startAngle = fly.curveCutRightEndAngle;
+		fly.rightOuterHoleArc.endAngle = fly.edgeOuterArc.startAngle;
+		fly.rightInnerHoleArc.startAngle = fly.edgeInnerArc.startAngle + 180;
+		fly.rightInnerHoleArc.endAngle = fly.curveCutRightStartAngle;
+		fly.leftOuterHoleArc.startAngle = fly.edgeOuterArc.endAngle - fly.spokeAngle;
+		fly.leftOuterHoleArc.endAngle = fly.curveCutLeftEndAngle - 180;
+		fly.leftInnerHoleArc.startAngle = fly.curveCutLeftStartAngle + 180;
+		fly.leftInnerHoleArc.endAngle = fly.edgeInnerArc.endAngle - fly.spokeAngle - 180;
+	} else {
+		// Straight spokes.
+		//
+		// This produces the following calculated values for cutting straight spokes:
+		//		fly.rightCutEdgeStart	start point (x,y)
+		//		fly.rightCutEdgeEnd		end point (x,y)
+		//		fly.rightCutAngle
+		//		fly.leftCutEdgeStart	start point (x,y)
+		//		fly.leftCutEdgeEnd		end point (x,y)
+		//		fly.leftCutAngle
+		//		fly.spokeCenterlineRadius  length of radius for drawing the centerlines of spokes
+		
+		// The calculation is relative to the line between the inner hole center and outer hole center.
+		// This is done for both left and right cut lines.
+		//
+		// The following very crude artwork shows the right cutline of a spoke
+		// The right cutline connects with the "left" edges between outer and inner holes.
+		// We work in rotated axes such that 0,0 represents the center of the inner hole,
+		// and (0,d) represents the center of the outer hole.  The value d is the distance
+		// between inner/outer hole centers (easily calculated).
+		//
+		//							 /o (outer hole center)
+		//					        / |
+		//					       /  |
+		//					      /   |
+		//					     /    |  (inner hole center)
+		//			-------------+----O--------------------- (temp rotated X,Y axes)
+		//                            |
+		// We can trivially calculate the endpoints of the cutline in this space which has
+		// been shifted and rotated.  If the inner center hole radius is i, and the outer
+		// center hole radius is o, the endpoints of this line go from (-i,0) to (-o,d).
+		//
+		// To produce final coordinates, these two endpoints need to be rotated back to match
+		// the angle of the line that connects the centers of the holes.  Finally, the result
+		// must be shifted by the coordinates of the inner center hole because referred to that
+		// as 0,0 when doing the math.  That is, we did "offset" math relative to that coordinate.
+		//
+		// Finally, once we have the endpoints of a cutline, we can calculate its angle.  We
+		// fix the number of digits in this angle so it comes out consistently in calculations.
+		
+		// Calculate the cutline to the right of the spoke
+		var rightHoleCenterAngle = angle(fly.rightInnerCenter, fly.rightOuterCenter);
+		var rightHoleDistance = distance(fly.rightInnerCenter, fly.rightOuterCenter);
+		var rightStart = rotate(toPoint(-fly.innerHoleRadius, 0), rightHoleCenterAngle);
+		var rightEnd = rotate(toPoint(-fly.outerHoleRadius, rightHoleDistance), rightHoleCenterAngle);
+		fly.rightCutEdgeStart = addPoints(fly.rightInnerCenter, rightStart);
+		fly.rightCutEdgeEnd = addPoints(fly.rightInnerCenter, rightEnd);
+		fly.rightCutAngle = angle(fly.rightCutEdgeStart, fly.rightCutEdgeEnd).toFixed(angdigits);
+		
+		// Calculate the cutline to the left of the spoke
+		var leftHoleCenterAngle = angle(fly.leftInnerCenter, fly.leftOuterCenter);
+		var leftHoleDistance = distance(fly.leftInnerCenter, fly.leftOuterCenter);
+		var leftStart = rotate(toPoint(fly.innerHoleRadius, 0), leftHoleCenterAngle);
+		var leftEnd = rotate(toPoint(fly.outerHoleRadius, leftHoleDistance), leftHoleCenterAngle);
+		fly.leftCutEdgeStart = addPoints(fly.leftInnerCenter, leftStart);
+		fly.leftCutEdgeEnd = addPoints(fly.leftInnerCenter, leftEnd);
+		fly.leftCutAngle = angle(fly.leftCutEdgeStart, fly.leftCutEdgeEnd).toFixed(angdigits);
+		
+		// Finally, fill in the drawing arcs.  The objects have been created earlier.
+		fly.rightOuterHoleArc.startAngle = rightHoleCenterAngle - 90;
+		fly.rightOuterHoleArc.endAngle = fly.rightOuterAngle;
+		fly.rightInnerHoleArc.startAngle = fly.rightInnerAngle - 180;
+		fly.rightInnerHoleArc.endAngle = rightHoleCenterAngle - 90 - 360;
+		fly.leftOuterHoleArc.startAngle = fly.leftOuterAngle;
+		fly.leftOuterHoleArc.endAngle = leftHoleCenterAngle - 270;
+		fly.leftInnerHoleArc.startAngle = leftHoleCenterAngle + 90;
+		fly.leftInnerHoleArc.endAngle = fly.leftInnerAngle - 180;
+		
+		// This is a bound for the spoke centerlines. We use 5% beyond the edge.
+		fly.spokeCenterlineRadius = fly.flywheelRadius * 1.05;
+	}
+
+
 
 	return fly;
 }
@@ -1199,22 +1405,21 @@ function drawFlywheelDemo(canvas, fly) {
 	// Note that the info for spoke position N refers to detail clockwise
 	// from the spoke.  Position N=0 is straight up.
 	var thisangle = 0;
-	for (var spk=0; spk < fly.numSpokes; spk++) {
-		// Draw spoke centerline (QQQ fix for curved spokes)
-		drawRadialLine(flyctx, center, thisangle,
-				fly.flywheelRadius*1.05,   		// scale up 5%
-				"black", pattern_dash_dot_dot);
-		
+	for (var spk=0; spk < fly.numSpokes; spk++) {		
 		// Draw the 4 holes
 		var rightInnerCenter = rotate(fly.rightInnerCenter, thisangle);
-		var leftInnerCenter = rotate(fly.leftInnerCenter, thisangle);
 		var rightOuterCenter = rotate(fly.rightOuterCenter, thisangle);
+		var leftInnerCenter = rotate(fly.leftInnerCenter, thisangle);
 		var leftOuterCenter = rotate(fly.leftOuterCenter, thisangle);
+		// Rather than work with the hole to the left of this spoke, we advance to the
+		// left of the *next* spoke so we draw only in a clockwise fashion.
+		var nextleftInnerCenter = rotate(fly.leftInnerCenter, thisangle + fly.spokeAngle);
+		var nextleftOuterCenter = rotate(fly.leftOuterCenter, thisangle + fly.spokeAngle);
 
 		drawCircle(flyctx, rightInnerCenter, fly.innerHoleRadius, "lightgray", fill_none, pattern_solid);
-		drawCircle(flyctx, leftInnerCenter, fly.innerHoleRadius, "lightgray", fill_none, pattern_solid);
 		drawCircle(flyctx, rightOuterCenter, fly.outerHoleRadius, "lightgray", fill_none, pattern_solid);
-		drawCircle(flyctx, leftOuterCenter, fly.outerHoleRadius, "lightgray", fill_none, pattern_solid);
+		drawCircle(flyctx, nextleftInnerCenter, fly.innerHoleRadius, "lightgray", fill_none, pattern_solid);
+		drawCircle(flyctx, nextleftOuterCenter, fly.outerHoleRadius, "lightgray", fill_none, pattern_solid);
 
 		// Draw the outer edge arc
 		drawArc(flyctx, center, fly.edgeOuterArc.radius,
@@ -1227,7 +1432,39 @@ function drawFlywheelDemo(canvas, fly) {
 					fly.edgeInnerArc.endAngle + thisangle,
 					"black", pattern_solid);
 
-		if (fly.curveAngle == 0) {
+		if (fly.curveAngle) {
+			// Curve spoke drawing.
+			
+			// Draw spoke centerline.   curveSpokeCenterlineEndAngle was calculated for this purpose
+			var curveSpokeCenter = rotate(fly.curveSpokeCenter, thisangle);
+			drawArc(flyctx, curveSpokeCenter, fly.curveRadius,
+					fly.curveSpokeStartAngle + thisangle, fly.curveSpokeCenterlineEndAngle + thisangle,
+					"gray", pattern_dash_dot_dot);
+
+			// Draw right cut arc
+			var curveCutRightCenter = rotate(fly.curveCutRightCenter, thisangle);
+			drawArc(flyctx, curveCutRightCenter, fly.curveRadius,
+					fly.curveCutRightStartAngle + thisangle, fly.curveCutRightEndAngle + thisangle,
+					"black", pattern_solid);
+					
+			// Draw left cut arc
+			var curveCutLeftCenter = rotate(fly.curveCutLeftCenter, thisangle);
+			drawArc(flyctx, curveCutLeftCenter, fly.curveRadius,
+					fly.curveCutLeftStartAngle + thisangle, fly.curveCutLeftEndAngle + thisangle,
+					"black", pattern_solid)
+
+			/*if (spk == 0) {
+				// draw sample centerpoints for spoke 0 only.
+				// drawCircle(flyctx, curveCutRightCenter, 2/flyctx.fscale, "green", "green", pattern_solid);
+			}*/
+		} else {
+			// Straight spoke drawing.
+			
+			// Draw spoke centerline
+			drawRadialLine(flyctx, center, thisangle,
+							fly.spokeCenterlineRadius,   		// radius + 5%
+							"gray", pattern_dash_dot_dot);
+
 			// Draw right/left cut lines
 			var rightCutEdgeStart = rotate(fly.rightCutEdgeStart, thisangle);
 			var rightCutEdgeEnd = rotate(fly.rightCutEdgeEnd, thisangle);
@@ -1236,34 +1473,30 @@ function drawFlywheelDemo(canvas, fly) {
 			var leftCutEdgeStart = rotate(fly.leftCutEdgeStart, thisangle);
 			var leftCutEdgeEnd = rotate(fly.leftCutEdgeEnd, thisangle);
 			drawLine(flyctx, leftCutEdgeStart, leftCutEdgeEnd, "black", pattern_solid);
-			
-			// Draw arcs to connect cut lines with cut edge arcs
-			// This makes the drawing look nice.  The inner/outer holes
-			// are drilled when milling and this forms these arcs as the
-			// inside web is cut away.
-			
-			// QQQ these should be fly.rightHoleCenterAngle ...
-			// but they are only valid for non-curved spokes.
-			var rightHoleCenterAngle = angle(fly.rightInnerCenter, fly.rightOuterCenter);
-			var leftHoleCenterAngle = angle(fly.leftInnerCenter, fly.leftOuterCenter);
-
-			drawArc(flyctx, rightOuterCenter, fly.outerHoleRadius,
-					rightHoleCenterAngle + thisangle - 90,
-					fly.rightOuterAngle + thisangle,
-					"black", pattern_solid);
-			drawArc(flyctx, rightInnerCenter, fly.innerHoleRadius,
-					fly.rightInnerAngle + thisangle - 180,
-					rightHoleCenterAngle + thisangle - 90 - 360,
-					"black", pattern_solid);
-			drawArc(flyctx, leftOuterCenter, fly.outerHoleRadius,
-					fly.leftOuterAngle + thisangle,
-					leftHoleCenterAngle + thisangle - 270,
-					"black", pattern_solid);
-			drawArc(flyctx, leftInnerCenter, fly.innerHoleRadius,
-					leftHoleCenterAngle + thisangle + 90,
-					fly.leftInnerAngle + thisangle - 180,
-					"black", pattern_solid);
 		}
+
+		// Draw arcs to connect cut lines with cut edge arcs
+		// This makes the drawing look nice.  The inner/outer holes
+		// are drilled when milling and this forms these arcs as the
+		// inside web is cut away.
+		drawArc(flyctx, rightOuterCenter, fly.outerHoleRadius,
+				fly.rightOuterHoleArc.startAngle + thisangle,
+				fly.rightOuterHoleArc.endAngle + thisangle,
+				"black", pattern_solid);
+		drawArc(flyctx, rightInnerCenter, fly.innerHoleRadius,
+				fly.rightInnerHoleArc.startAngle + thisangle,
+				fly.rightInnerHoleArc.endAngle + thisangle,
+				"black", pattern_solid);
+		drawArc(flyctx, nextleftOuterCenter, fly.outerHoleRadius,
+				fly.leftOuterHoleArc.startAngle + thisangle + fly.spokeAngle,
+				fly.leftOuterHoleArc.endAngle + thisangle + fly.spokeAngle,
+				"black", pattern_solid);
+		drawArc(flyctx, nextleftInnerCenter, fly.innerHoleRadius,
+				fly.leftInnerHoleArc.startAngle + thisangle + fly.spokeAngle,
+				fly.leftInnerHoleArc.endAngle + thisangle + fly.spokeAngle,
+				"green", pattern_solid);
+
+		// Advance to next spoke angle for next iteration
 		thisangle += fly.spokeAngle;
 	}
 }
@@ -1498,202 +1731,6 @@ function drawSpokeStep(step, canvas, fly) {
 			context.stroke();
 	}
 
-}
-
-function debugFlywheel(canvas, fly, curveangle) {
-	var flyctx = makeDrawingContext(canvas, fly.flywheelRadius);
-	var center = toPoint(0,0);
-
-	// Assigning to canvas.width will clear it
-	canvas.width = canvas.width;
-
-	// Draw the flywheel
-	//
-	// Shade the flywheel light gray, but fill in the web (out to the rim)
-	// with a white circle.  The hub is also white, but the shaft is dark gray.
-	drawCircle(flyctx, center, fly.flywheelRadius,	"black", "lightgray", pattern_solid);
-	drawCircle(flyctx, center, fly.rimRadius, "black", "white", pattern_solid);
-	drawCircle(flyctx, center, fly.hubRadius, "black", "white", pattern_solid);
-	drawCircle(flyctx, center, fly.shaftRadius, "black", "gray", pattern_solid);
-
-	// Draw the radius lines for inner/outer hole pattern
-	drawCircle(flyctx, center, fly.innerHoleDistance, "red", fill_none, pattern_dot);
-	drawCircle(flyctx, center, fly.outerHoleDistance, "red", fill_none, pattern_dot);
-		
-	// Loop through the spokes and draw stuff using the spkinfo.
-	// Note that the info for spoke position N refers to detail clockwise
-	// from the spoke.  Position N=0 is straight up.
-	var thisangle = 0;
-	for (var spk=0; spk < 1; spk++) {		// only draw spoke 0 for now.  Otherwise we draw over the prev spoke.
-		// Outer holes need to be rotated for curved spokes.
-		// calculateFlywheel should do this, but we'll adjust for debug.
-		var curveRightOuterCenter = rotate(fly.rightOuterCenter, thisangle+curveangle);
-		var curveLeftOuterCenter = rotate(fly.leftOuterCenter, thisangle+curveangle);
-		// No curve angle added on the inner centers
-		var curveRightInnerCenter = rotate(fly.rightInnerCenter, thisangle);
-		var curveLeftInnerCenter = rotate(fly.leftInnerCenter, thisangle);
-		// Draw the 4 holes.
-		drawCircle(flyctx, curveLeftOuterCenter, fly.outerHoleRadius, "lightgray", fill_none, pattern_solid);
-		drawCircle(flyctx, curveRightOuterCenter, fly.outerHoleRadius, "lightgray", fill_none, pattern_solid);
-		drawCircle(flyctx, curveLeftInnerCenter, fly.innerHoleRadius, "lightgray", fill_none, pattern_solid);
-		drawCircle(flyctx, curveRightInnerCenter, fly.innerHoleRadius, "lightgray", fill_none, pattern_solid);
-
-		// Draw the outer edge arc. Adjust by curveangle, but otherwise it is correct
-		drawArc(flyctx, center,
-					fly.edgeOuterArc.radius,
-					fly.edgeOuterArc.startAngle + thisangle + curveangle,
-					fly.edgeOuterArc.endAngle + thisangle + curveangle,
-					"black", pattern_solid);
-		
-		// Draw the inner edge arc   QQQ needs fixing
-		drawArc(flyctx, center,
-					fly.edgeInnerArc.radius,
-					fly.edgeInnerArc.startAngle + thisangle,
-					fly.edgeInnerArc.endAngle + thisangle,
-					"black", pattern_solid);
-		
-		// Now work on the spoke.
-		// Start by forming an arc from 3 points:
-		//   A: The midpoint of the line between the right outer hole center
-		//		and the left outer hole center of the previous spoke
-		//   B: The midpoint of the line between the right inner hole center
-		// 		and the left inner hole center of the previous spoke
-		//   C: The center of the flywheel (always 0,0).
-		// This makes a nicely shaped spoke.  The radius of this arc is what
-		// we really need.  When we calculate the arcs for cutting, we'll use
-		// this radius to compute an arc that is tangent to the inner/outer
-		// holes so we get a nice transition.
-		
-		var ptA = midpoint(curveLeftOuterCenter, curveRightOuterCenter);
-		var ptB = midpoint(curveLeftInnerCenter, curveRightInnerCenter);
-		// Try adjusting point C.
-		// We do this to allow the arc to spring a little so it isn't constrained hard to the center of the hub.
-		//
-		// We assume the spoke will always curve to the left (positive angle).
-		// We also assume a reasonable angle.  It can be perhaps up to 75% of the spokeAngle.  Maybe a bit more.
-		// We adjust point C to the right of the center of the hub.  We use the curveangle as a ratio of the spokeAngle.
-		// At the full spokeAngle we will shift to the right of the center 1/2 of the innerHoleDistance.  This can go further
-		// if the curveangle is allowed to exceed the spokeAngle.
-		var ptC = toPoint(-(fly.innerHoleDistance/2)*(curveangle/fly.spokeAngle),0);
-		
-		// Draw these points for debug.  To make 1 pixel radius we use 1/fscale
-		drawCircle(flyctx,	ptA, 1/flyctx.fscale, "black", "black", pattern_solid);
-		drawCircle(flyctx,	ptB, 1/flyctx.fscale, "black", "black", pattern_solid);
-		if (spk == 0) {
-			drawCircle(flyctx,	ptC, 1/flyctx.fscale, "black", "black", pattern_solid);
-		}
-		
-		// Now calculate the radius given these 3 points.
-		//
-		// There are a couple ways to do this.  You can calculate perpendicular
-		// lines off the two line segments beteen the three points and where
-		// these perpendicular lines intersect is the center.
-		//
-		// The other way is to use the equation of a circle:
-		//    (x-h)^2 + (y-k)^2 = r^2    (where ^2 represents "squared")
-		// here we have 3 sets of x,y values, but h, k and r are unknown.
-		// Since we have 3 sets, and 3 variables, we can solve.   This
-		// produces a lot of algebra rearranging that I won't document here.
-		// See http://2000clicks.com/mathhelp/GeometryConicSectionCircleEquationGivenThreePoints.aspx
-		// and I'll stick to their variable names so it makes sense to the reader.
-		var a=ptA.x, b=ptA.y, c=ptB.x, d=ptB.y, e=ptC.x, f=ptC.y;
-		var h, k, r;
-		h = (1/2)*((a*a+b*b)*(f-d) + (c*c+d*d)*(b-f) + (e*e+f*f)*(d-b)) / (a*(f-d) + c*(b-f) + e*(d-b));
-		k = (1/2)*((a*a+b*b)*(e-c) + (c*c+d*d)*(a-e) + (e*e+f*f)*(c-a)) / (b*(e-c) + d*(a-e) + f*(c-a));
-		r = Math.sqrt((a-h)*(a-h) + (b-k)*(b-k));
-		
-		// QQQ:   Save r and toPoint(h,k) as the spoke arc reference
-		var spokecenterarc = toPoint(h,k);
-		drawCircle(flyctx,	spokecenterarc, 2/flyctx.fscale, "blue", "blue", pattern_solid);
-		// drawCircle(flyctx, toPoint(h,k), r, "blue", fill_none, pattern_dot);
-		// Adding 30 degrees is a hack to extend the spoke centerline
-		drawArc(flyctx, spokecenterarc, r,
-				angle(spokecenterarc, ptC), angle(spokecenterarc, ptA)+30,
-				"black", pattern_dash_dot_dot)
-
-
-		
-		// Now we have our radius.  We'll use it to calculate the center
-		// point for the two arcs we need (two cut sides of the spoke).
-		//
-		// We want this arc to be tangent to the inner/outer hole edges.
-		// The observation is that the radius of the arc goes through the
-		// center of each of these circles.
-		//
-		// We also know the radius of both inner and outer holes, so we
-		// can subtract each of those from the arc radius to give us r1 and r2.
-		// These are lengths of two sides of a triangle (two sides of the "pie"
-		// that is formed by the arc.  The third side's length is the distance
-		// between centers of the inner/outer holes.  Call it d.  Easy to calculate.
-		//
-		//                           /|\ (x,y)
-		//                         /  | \
-		//                    r1 /    |  \ r2
-		//                     /      |h  \
-		//                   /   a    |  b \
-		//                  -----------------
-		//               (0,0)     d        (d,0)
-		//
-		// Let's have this triangle unrotated with the outer hole center vertex
-		// positioned at 0,0.  We calculated the base length as d, so the inner
-		// hole vertex on the left is d,0.   Drop a line perpendicular to the
-		// base and we get two left triangles.  The lengths a, b, and h are
-		// unknown.  We know d=a+b, so let's find them.  When we do, we can
-		// use (a,h) to represent x,y.  All we need to do is rotate the triangle
-		// and then shift it by the original coords for the right vertex.
-		var d = distance(curveRightInnerCenter, curveRightOuterCenter);
-		var r1 = r - fly.outerHoleRadius;
-		var r2 = r - fly.innerHoleRadius;
-		var a = (d*d + r1*r1 - r2*r2) / (2*d);
-		var h = Math.sqrt(r1*r1 - a*a);
-
-		var ang = angle(curveRightInnerCenter, curveRightOuterCenter);
-		var xy = rotate(toPoint(a,h), ang+90);
-		var innerarc = addPoints(xy, curveRightOuterCenter);
-		drawCircle(flyctx, innerarc, 2/flyctx.fscale, "green", "green", pattern_solid);
-		// drawCircle(flyctx,	innerarc, r, "green", fill_none, pattern_dot);
-		drawArc(flyctx, innerarc, r,
-				angle(innerarc, curveRightInnerCenter), angle(innerarc, curveRightOuterCenter),
-				"black", pattern_solid)
-		
-		// The other side of the spoke is almost the same.
-		// However, we use the prev holes, of course, and we must ADD to get
-		// r1, r2 since we are on the near side of the holes.
-		var d = distance(curveLeftInnerCenter, curveLeftOuterCenter);
-		var r1 = r + fly.outerHoleRadius;
-		var r2 = r + fly.innerHoleRadius;
-		var a = (d*d + r1*r1 - r2*r2) / (2*d);
-		var h = Math.sqrt(r1*r1 - a*a);
-
-		var ang = angle(curveLeftInnerCenter, curveLeftOuterCenter);
-		var xy = rotate(toPoint(a,h), ang+90);
-		var outerarc = addPoints(xy, curveLeftOuterCenter);
-		drawCircle(flyctx, outerarc, 2/flyctx.fscale, "orange", "orange", pattern_solid);
-		// drawCircle(flyctx,	outerarc, r, "orange", fill_none, pattern_dot);
-		drawArc(flyctx, outerarc, r,
-				angle(outerarc, curveLeftInnerCenter), angle(outerarc, curveLeftOuterCenter),
-				"black", pattern_solid)
-
-		// Complete the edges of the spoke holes with arcs
-		drawArc(flyctx, curveRightOuterCenter, fly.outerHoleRadius,
-				angle(innerarc, curveRightOuterCenter),
-				fly.edgeOuterArc.startAngle + thisangle + curveangle,
-				"black", pattern_solid);
-		drawArc(flyctx, curveRightInnerCenter, fly.innerHoleRadius,
-				fly.edgeInnerArc.startAngle + thisangle + 180,
-				angle(curveRightInnerCenter, innerarc) + 180,
-				"black", pattern_solid);
-		drawArc(flyctx, curveLeftOuterCenter, fly.outerHoleRadius,
-				fly.edgeOuterArc.endAngle + thisangle + curveangle - fly.spokeAngle,
-				angle(curveLeftOuterCenter, outerarc),
-				"black", pattern_solid);
-		drawArc(flyctx, curveLeftInnerCenter, fly.innerHoleRadius,
-					angle(curveLeftInnerCenter, innerarc),
-					fly.edgeInnerArc.endAngle + thisangle - fly.spokeAngle + 180,
-					"black", pattern_solid);
-					
-		thisangle += fly.spokeAngle;
-	}
 }
 
 </script>
