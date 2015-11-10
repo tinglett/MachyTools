@@ -515,22 +515,17 @@ function buildFlywheels() {
 	document.getElementById("instRTspokeAngle1").innerHTML = fly.spokeAngle.toFixed(angdigits);
 	document.getElementById("instRTspokeAngle2").innerHTML = fly.spokeAngle.toFixed(angdigits);
 	document.getElementById("instRTspokeAngle3").innerHTML = fly.spokeAngle.toFixed(angdigits);
-
+	}
+	
 	var ThreeHoleAngle = document.getElementById("ThreeHoleAngle");
 	var angle3hole = fly.spokeAngle/2;
 	ThreeHoleAngle.innerHTML = angle3hole.toFixed(angdigits);
-	
-	// Calculate thickness of spoke at inner and outer holes.
-	// This is easy with spoke zero because Y is fixed.  That is, they
-	// are horizontally aligned and also equidistant from the spoke.
-	// So just use the X dimension less the radius of the hole and double it.
+
+	// Update document to show thickness of spoke ends.
 	var InnerThick = document.getElementById("InnerThick");
 	var OuterThick = document.getElementById("OuterThick");
-	var innerSpokeThickness = (fly.rightInnerCenter.x - fly.innerHoleRadius)*2;
-	var outerSpokeThickness = (fly.rightOuterCenter.x - fly.outerHoleRadius)*2;
-	InnerThick.innerHTML = innerSpokeThickness.toFixed(lendigits);
-	OuterThick.innerHTML = outerSpokeThickness.toFixed(lendigits);
-	}
+	InnerThick.innerHTML = fly.innerSpokeThickness.toFixed(lendigits);
+	OuterThick.innerHTML = fly.outerSpokeThickness.toFixed(lendigits);
 	
 	//
 	// Now update cutting schedule tables.
@@ -718,6 +713,12 @@ function distance(p1, p2) {
 // Midpoint between two points
 function midpoint(p1, p2) {
 	return toPoint((p1.x + p2.x)/2, (p1.y + p2.y)/2);
+}
+
+// Slope of a line between two points
+function slope(p1, p2) {
+	var diffPt = subtractPoints(p1, p2);
+	return diffPt.y / diffPt.x;
 }
 
 // Calculate angle between two points.
@@ -1302,6 +1303,49 @@ function calculateFlywheel(
 		fly.leftOuterHoleArc.endAngle = fly.curveCutLeftEndAngle - 180;
 		fly.leftInnerHoleArc.startAngle = fly.curveCutLeftStartAngle + 180;
 		fly.leftInnerHoleArc.endAngle = fly.edgeInnerArc.endAngle - fly.spokeAngle - 180;
+		
+		// Calculate thickness of spoke at inner and outer holes.
+		//
+		// Do the outer hole first.
+		// We make the observation that the thickness of the spoke near the outer hole is the distance
+		// between right/left arcs along the radial line from the center of the right cutline arc to the left
+		// outer hole.  We find the point where each arc intersects this line, then compute the distance between them.
+		//
+		// This calculation is close, but not exact.  A better calculation involves calculating a line extending from
+		// the point at the hole edge (we calculate this point here) to be perpendicular to the spoke centerline arc.
+		// Where this perpendicular line intersects the other arc should be the thinnest spot at that end of the spoke.
+		//
+		// First calculate the point along the edge of the left outer hole that is on the "inside" aligned with the
+		// radial line to the center of the left cutline arc.  An easy way to calculate this is to take (0,r), where
+		// r is the radius of the outer hole.  This point is relative to the center of the hole.  Now rotate the point
+		// using the angle of the line from the center of this hole to the center of the arc.  This is already
+		// calculated as fly.curveCutLeftEndAngle. Finally, this coordinate is relative to the center of the hole,
+		// so add the center of the hole to get the final coordinates.  It's easier than it sounds.
+		var edgePt = toPoint(0,fly.outerHoleRadius);
+		var rotPt = rotate(edgePt, fly.curveCutLeftEndAngle-180);
+		fly.outerLeftSpokeThicknessPoint = addPoints(fly.leftOuterCenter, rotPt);
+		var totalDistance = distance(fly.curveCutRightCenter, fly.outerLeftSpokeThicknessPoint);
+		fly.outerSpokeThickness = totalDistance - fly.curveRadius;
+		// Calculate the outer right thickness point for debug.
+		var ang = angle(fly.curveCutRightCenter, fly.outerLeftSpokeThicknessPoint);
+		var edgePt = toPoint(0,fly.curveRadius);
+		var rotPt = rotate(edgePt, ang);
+		fly.outerRightSpokeThicknessPoint = addPoints(fly.curveCutRightCenter, rotPt);
+		
+		// Now do the same for the inner spoke thickness.
+		// This time use the right cut arc to find the right thickness point first.
+		// Then find the left point using the left cut arc center and radius.
+		var edgePt = toPoint(0,fly.innerHoleRadius);
+		var rotPt = rotate(edgePt, fly.curveCutRightStartAngle);
+		fly.innerRightSpokeThicknessPoint = addPoints(fly.rightInnerCenter, rotPt);
+		var totalDistance = distance(fly.curveCutLeftCenter, fly.innerRightSpokeThicknessPoint);
+		fly.innerSpokeThickness = fly.curveRadius - totalDistance;  // curve radius is now the "far" side
+		// Calculate the inner left thickness point for debug.
+		var ang = angle(fly.curveCutLeftCenter, fly.innerRightSpokeThicknessPoint);
+		var edgePt = toPoint(0,fly.curveRadius);
+		var rotPt = rotate(edgePt, ang);
+		fly.innerLeftSpokeThicknessPoint = addPoints(fly.curveCutLeftCenter, rotPt);
+		
 	} else {
 		// Straight spokes.
 		//
@@ -1360,6 +1404,9 @@ function calculateFlywheel(
 		fly.leftCutEdgeEnd = addPoints(fly.leftInnerCenter, leftEnd);
 		fly.leftCutAngle = angle(fly.leftCutEdgeStart, fly.leftCutEdgeEnd).toFixed(angdigits);
 		
+		// This is a bound for the spoke centerlines. We use 5% beyond the edge.
+		fly.spokeCenterlineRadius = fly.flywheelRadius * 1.05;
+		
 		// Finally, fill in the drawing arcs.  The objects have been created earlier.
 		fly.rightOuterHoleArc.startAngle = rightHoleCenterAngle - 90;
 		fly.rightOuterHoleArc.endAngle = fly.rightOuterAngle;
@@ -1370,8 +1417,13 @@ function calculateFlywheel(
 		fly.leftInnerHoleArc.startAngle = leftHoleCenterAngle + 90;
 		fly.leftInnerHoleArc.endAngle = fly.leftInnerAngle - 180;
 		
-		// This is a bound for the spoke centerlines. We use 5% beyond the edge.
-		fly.spokeCenterlineRadius = fly.flywheelRadius * 1.05;
+		// Calculate thickness of spoke at inner and outer holes.
+		// This is easy with spoke zero because Y is fixed.  That is, inner/outer holes
+		// are horizontally aligned and also equidistant from the spoke.
+		// So just use the X dimension less the radius of the hole and double it.
+		fly.innerSpokeThickness = (fly.rightInnerCenter.x - fly.innerHoleRadius)*2;
+		fly.outerSpokeThickness = (fly.rightOuterCenter.x - fly.outerHoleRadius)*2;
+		
 	}
 
 
@@ -1457,6 +1509,15 @@ function drawFlywheelDemo(canvas, fly) {
 					fly.curveCutLeftStartAngle + thisangle, fly.curveCutLeftEndAngle + thisangle,
 					"black", pattern_solid)
 
+			if (spk == 0) {
+				drawCircle(flyctx, fly.outerLeftSpokeThicknessPoint, 2/flyctx.fscale, "green", "green", pattern_solid);
+				drawCircle(flyctx, fly.outerRightSpokeThicknessPoint, 2/flyctx.fscale, "green", "green", pattern_solid);
+				drawCircle(flyctx, fly.innerLeftSpokeThicknessPoint, 2/flyctx.fscale, "green", "green", pattern_solid);
+				drawCircle(flyctx, fly.innerRightSpokeThicknessPoint, 2/flyctx.fscale, "green", "green", pattern_solid);
+				drawCircle(flyctx, fly.curveCutLeftCenter, 2/flyctx.fscale, "green", "green", pattern_solid);
+				drawCircle(flyctx, fly.curveCutRightCenter, 2/flyctx.fscale, "blue", "blue", pattern_solid);
+
+			}
 			/*if (spk == 0) {
 				// draw sample centerpoints for spoke 0 only.
 				// drawCircle(flyctx, curveCutRightCenter, 2/flyctx.fscale, "green", "green", pattern_solid);
