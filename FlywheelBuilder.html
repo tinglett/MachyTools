@@ -1275,10 +1275,15 @@ function calculateFlywheel(
 		// center of the flywheel (always 0,0 which is nice), and P1 represents the center of the
 		// centerline arc (fly.curveSpokeCenter).  We need to calculate P2, and this leads to P3.
 		// See the webpage.  The math here tries to reflect that page is much as possible.
+		//
+		// We use 5% beyond rim because the centerline really can arc around and miss the flywheel
+		// outer edge for heavy rotations.  We could check if d < |r1-r0| or if h is NaN.  This might
+		// be an indicator that the curve is too sharp and unmachinable.
+		//
 		var P0 = toPoint(0,0);
 		var P1 = fly.curveSpokeCenter;
 		var d = distance(P0, P1);
-		var r0 = fly.flywheelRadius*1.05;		// 5% bigger than flywheel radius
+		var r0 = fly.rimRadius*1.05;		// Use rim to make sure it fits.
 		var r1 = fly.curveRadius;
 		var a = (r0*r0 - r1*r1 + d*d)/(2*d);	// distance from P0 to P2 heading on the slope toward P1.
 		var h = Math.sqrt(r0*r0 - a*a);			// Pythagorean formula to get 3rd side of the triangle		
@@ -1287,7 +1292,6 @@ function calculateFlywheel(
 		var x3 = x2 - (h * P1.y)/d;				// also simple due to 0,0
 		var y3 = y2 + (h * P1.x)/d;
 		fly.curveSpokeCenterlineEndAngle = angle(fly.curveSpokeCenter, toPoint(x3,y3));
-		
 
 		// Finally, fill in the drawing arcs.  The objects have been created earlier.
 		fly.rightOuterHoleArc.startAngle = fly.curveCutRightEndAngle;
@@ -1603,18 +1607,20 @@ function drawFlywheelDims(canvas, fly) {
 		fly.spokeAngle.toFixed(angdigits) + DEGSYM, 0.98,
 		"black", pattern_solid);
 
-	// Add degree marks for each spoke.
-	flyctx.context.save();
-	var spk;
-	var thisangle = 0;
-	for (spk=0; spk < fly.numSpokes; spk++) {
-		var label = thisangle.toFixed(angdigits) + DEGSYM;
-		var textwidth = flyctx.context.measureText(label).width;
-		var dest = rotate(toPoint(0, fly.flywheelRadius*flyctx.fscale * 1.07), thisangle);
-		flyctx.context.fillText(label, flyctx.offsetx+dest.x - textwidth/2, flyctx.offsety-dest.y);
-		thisangle += fly.spokeAngle;
+	// Add degree marks for each spoke.  Only valuable for straight spokes
+	if (fly.curveAngle == 0) {
+		flyctx.context.save();
+		var spk;
+		var thisangle = 0;
+		for (spk=0; spk < fly.numSpokes; spk++) {
+			var label = thisangle.toFixed(angdigits) + DEGSYM;
+			var textwidth = flyctx.context.measureText(label).width;
+			var dest = rotate(toPoint(0, fly.flywheelRadius*flyctx.fscale * 1.07), thisangle);
+			flyctx.context.fillText(label, flyctx.offsetx+dest.x - textwidth/2, flyctx.offsety-dest.y);
+			thisangle += fly.spokeAngle;
+		}
+		flyctx.context.restore();
 	}
-	flyctx.context.restore();
 }
 
 //
