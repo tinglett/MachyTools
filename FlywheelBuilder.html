@@ -718,6 +718,9 @@ function midpoint(p1, p2) {
 // Slope of a line between two points
 function slope(p1, p2) {
 	var diffPt = subtractPoints(p1, p2);
+	if (diffPt.x == 0) {
+		diffPt.x = 0.000001;	// a hack...but close enough for calculations
+	}
 	return diffPt.y / diffPt.x;
 }
 
@@ -1324,27 +1327,65 @@ function calculateFlywheel(
 		var edgePt = toPoint(0,fly.outerHoleRadius);
 		var rotPt = rotate(edgePt, fly.curveCutLeftEndAngle-180);
 		fly.outerLeftSpokeThicknessPoint = addPoints(fly.leftOuterCenter, rotPt);
-		var totalDistance = distance(fly.curveCutRightCenter, fly.outerLeftSpokeThicknessPoint);
-		fly.outerSpokeThickness = totalDistance - fly.curveRadius;
-		// Calculate the outer right thickness point for debug.
-		var ang = angle(fly.curveCutRightCenter, fly.outerLeftSpokeThicknessPoint);
-		var edgePt = toPoint(0,fly.curveRadius);
-		var rotPt = rotate(edgePt, ang);
-		fly.outerRightSpokeThicknessPoint = addPoints(fly.curveCutRightCenter, rotPt);
 		
+		// The second point is *much* more difficult.  We want to keep following the line until it intersects the
+		// inner (right) cutline arc.  Resort to using the equation for a circle (for the arc) and line (for the centerline arc radial line).
+		// Call the center of the inner (right) arc h,k with radius r.  The circle is (x-h)^2 + (y-k)^2 - r^2 = 0.
+		// Now if the centerline arc's center is a,b, we can use the formula of the line y = mx + b, where m is the slope and
+		// b can be calculated as -m*f+g if point f,g is on the line.
+		// Substitute that into our circle formula to get this ickiness:
+		//     (x-h)^2 + (mx + b - k)^2 - r^2 = 0
+		// Now do some algebra to solve for x.  I use parens to show the 3 parts...otherwise I am adding so they don't do anything.
+		// 	=> (x^2 - 2hx + h^2 + b^2) + (b^2 - 2bk + 2bmx + k^2 - 2kmx + m^2*x^2) - r^2 = 0
+		//  => (m^2*x^2 + x^2) + (2bmx - 2hx - 2kmx) + (h^2 + b^2 + k^2 - r^2 - 2bk) = 0   simply reordering terms into x^2, x, and the rest.
+		//  => (m^2 + 1)x^2 + (2bm - 2h - 2km)x + (h^2 + b^2 + k^2 - r^2 - 2bk) = 0 	factor out x^2 and x terms.
+		//
+		// This is a quadratic of the form Ax^2 + Bx + C = 0 where
+		//		A=m^2 + 1
+		//		B=2bm - 2h - 2km
+		// and  C=h^2 + b^2 + k^2 - r^2 - 2bk
+		//
+		// These A, B, and C values can be calculated from known values.
+		//
+		// Use the quadratic formula to get x = (-B +- Sqrt(B^2 - 4AC)) / 2A.  We can plug into y = mx + b to get y.
+		// Here it is, step by step.
+		var m = slope(fly.outerLeftSpokeThicknessPoint, fly.curveSpokeCenter);
+		var b = -m*fly.curveSpokeCenter.x + fly.curveSpokeCenter.y;   // now we have y = mx + b...that is, x and b.
+		var h = fly.curveCutRightCenter.x;
+		var k = fly.curveCutRightCenter.y;
+		var r = fly.curveRadius;
+		var A = m*m + 1;
+		var B = 2*b*m - 2*h - 2*k*m;
+		var C = h*h + b*b + k*k - r*r - 2*b*k;
+		// This is really -B +- sqrt(...).  We use - to get the value on the left, under the assumption the slope
+		// of the line of intersection goes up and to the left.  If there are cases where this isn't true, we'll need to
+		// decide which is correct (a line intersects a circle in 2 points).  One simple solution is to calculate both
+		// and choose which one has the shorter distance() to the left point.
+		var x = (-B - Math.sqrt(B*B - 4*A*C)) / (2*A);
+		var y = m * x + b;
+		fly.outerRightSpokeThicknessPoint = toPoint(x,y);
+		fly.outerSpokeThickness = distance(fly.outerLeftSpokeThicknessPoint, fly.outerRightSpokeThicknessPoint);
+				
 		// Now do the same for the inner spoke thickness.
 		// This time use the right cut arc to find the right thickness point first.
 		// Then find the left point using the left cut arc center and radius.
 		var edgePt = toPoint(0,fly.innerHoleRadius);
 		var rotPt = rotate(edgePt, fly.curveCutRightStartAngle);
 		fly.innerRightSpokeThicknessPoint = addPoints(fly.rightInnerCenter, rotPt);
-		var totalDistance = distance(fly.curveCutLeftCenter, fly.innerRightSpokeThicknessPoint);
-		fly.innerSpokeThickness = fly.curveRadius - totalDistance;  // curve radius is now the "far" side
-		// Calculate the inner left thickness point for debug.
-		var ang = angle(fly.curveCutLeftCenter, fly.innerRightSpokeThicknessPoint);
-		var edgePt = toPoint(0,fly.curveRadius);
-		var rotPt = rotate(edgePt, ang);
-		fly.innerLeftSpokeThicknessPoint = addPoints(fly.curveCutLeftCenter, rotPt);
+		
+		// Calcualte the innerLeftSpokeThicknessPoint.  Pretty similar to the outer calculation.
+		var m = slope(fly.innerRightSpokeThicknessPoint, fly.curveSpokeCenter);
+		var b = -m*fly.curveSpokeCenter.x + fly.curveSpokeCenter.y;   // now we have y = mx + b...that is, x and b.
+		var h = fly.curveCutLeftCenter.x;
+		var k = fly.curveCutLeftCenter.y;
+		var r = fly.curveRadius;
+		var A = m*m + 1;
+		var B = 2*b*m - 2*h - 2*k*m;
+		var C = h*h + b*b + k*k - r*r - 2*b*k;
+		var x = (-B - Math.sqrt(B*B - 4*A*C)) / (2*A);
+		var y = m * x + b;
+		fly.innerLeftSpokeThicknessPoint = toPoint(x,y);
+		fly.innerSpokeThickness = distance(fly.innerRightSpokeThicknessPoint, fly.innerLeftSpokeThicknessPoint);
 		
 	} else {
 		// Straight spokes.
@@ -1516,7 +1557,7 @@ function drawFlywheelDemo(canvas, fly) {
 				drawCircle(flyctx, fly.innerRightSpokeThicknessPoint, 2/flyctx.fscale, "green", "green", pattern_solid);
 				drawCircle(flyctx, fly.curveCutLeftCenter, 2/flyctx.fscale, "green", "green", pattern_solid);
 				drawCircle(flyctx, fly.curveCutRightCenter, 2/flyctx.fscale, "blue", "blue", pattern_solid);
-
+				drawCircle(flyctx, fly.curveSpokeCenter, 2/flyctx.fscale, "black", "black", pattern_solid);
 			}
 			/*if (spk == 0) {
 				// draw sample centerpoints for spoke 0 only.
