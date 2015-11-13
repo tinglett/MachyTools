@@ -424,6 +424,49 @@ var lendigits = 0;		// will be 3 for inches and 2 for mm
  	 document.getElementById("urlhash").value = "";
 	 document.getElementById("prevFlywheelUnits").value = "";
  }
+ 
+ /*
+  * Enable/disable conditional HTML.
+  *
+  * HTML doesn't have conditional text, but the document generated has many
+  * sections where it needs to be written one way vs another when a particular
+  * attribute of the flywheel is discussed.  This is primarily straight vs. curved
+  * spoke, and 3- vs 4-hole cutouts.  But there may be more conditions.
+  *
+  * This function assumes text is always paired.  If there is one choice,
+  * there is always the "else" choice.  So the function is designed to list the
+  * two choices as well as a flag that says if the first choice is chosen (or not).
+  *
+  * The "choices" are provided as HTML class names.  If a choice is enabled, this
+  * code runs through all HTML elements with the given class and sets their
+  * display style attribute to "inline."  This makes them visible.  If a choice is
+  * not enabled, the attribute is "none" which effectively deletes it.
+  *
+  * The unfortunate side-effect of "inline" is that the HTML element is now forced
+  * to be an inline element.  This is bad for headings and paragraphs.  The
+  * workaround used in this document is to always use the <span> tag, which has no
+  * formatting meaning anyway.  Nest this inside a <p> or whatever.
+  */
+ function chooseConditionalHTML(HTMLclass1, HTMLclass2, pickfirst) {
+	var onHTMLclass;
+	var offHTMLclass;
+	if (pickfirst) {
+		onHTMLclass = HTMLclass1;
+		offHTMLclass = HTMLclass2;
+	} else {
+		onHTMLclass = HTMLclass2;
+		offHTMLclass = HTMLclass1;
+	}
+	var onElements = document.getElementsByClassName(onHTMLclass);
+	var offElements = document.getElementsByClassName(offHTMLclass);
+	var i;
+	for (i=0; i<onElements.length; i++) {
+		onElements[i].style.display = "inline";
+	}
+	for (i=0; i<offElements.length; i++) {
+		offElements[i].style.display = "none";
+	}
+ }
 
 /*
  * Build all the flywheel pictures here.
@@ -545,52 +588,12 @@ function buildFlywheels() {
 	
 	// First thing, enable/hide anything in the document based on curve/straight or
 	// 3-hole/4-hole spokes.  Over time there may be more conditional text.
-	// A CSS class is used for each, so we only update the style for each element
-	// to either keep it (display:inline) or hide it (display:none).
-	// Ideally the display attribute could be removed from the style, but this doesn't
-	// work.  So it goes to inline.  Thus, <span> is usually the tag of choice.
-	// Nest it inside of another tag (e.g., <h2></h2> or <p></p>) if necessary.
-	var straightEle = document.getElementsByClassName("showForStraightSpoke");
-	var curvedEle   = document.getElementsByClassName("showForCurvedSpoke");
-	var hole3Ele = document.getElementsByClassName("showFor3HoleSpoke");
-	var hole4Ele   = document.getElementsByClassName("showFor4HoleSpoke");
-	var straightDisp;
-	var curvedDisp;
-	var hole3Disp;
-	var hole4Disp;
-	// curve vs. straight
-	if (fly.curveAngle) {
-		straightDisp = "none";
-		curvedDisp = "inline";
-	} else {
-		straightDisp = "inline";
-		curvedDisp = "none";
-	}
-	var i;
-	var num = straightEle.length;
-	for (i=0; i<num; i++) {
-		straightEle[i].style.display = straightDisp;
-	}
-	var num = curvedEle.length;
-	for (i=0; i<num; i++) {
-		curvedEle[i].style.display = curvedDisp;
-	}
+
+	// Curved-spoke vs. Straight-spoke
+	chooseConditionalHTML("showForCurvedSpoke", "showForStraightSpoke", fly.curveAngle > 0);
 	// 3-hole vs. 4-hole
-	if (fly.innerHoleAngle == fly.spokeBisect) {
-		hole3Disp = "inline";
-		hole4Disp = "none";
-	} else {
-		hole3Disp = "none";
-		hole4Disp = "inline";
-	}
-	var num = hole3Ele.length;
-	for (i=0; i<num; i++) {
-		hole3Ele[i].style.display = hole3Disp;
-	}
-	var num = hole4Ele.length;
-	for (i=0; i<num; i++) {
-		hole4Ele[i].style.display = hole4Disp;
-	}
+	chooseConditionalHTML("showFor3HoleSpoke", "showFor4HoleSpoke", fly.innerHoleAngle == fly.spokeBisect);
+
 	
 	// Now do some general substitutions of data from the fly object.
 	// Any element of the doc with class="flydata" will have the content substituted.
@@ -601,6 +604,7 @@ function buildFlywheels() {
 	// could append a suffix _goop and remove it before doing the lookup.
 	var flydataEle = document.getElementsByClassName("flydata");
 	var num = flydataEle.length;
+	var i;
 	for (i=0; i<num; i++) {
 		var ele = flydataEle[i];
 		var idparts = ele.id.split(":");	// Expect field:format
