@@ -49,7 +49,7 @@ table, th, td {
 </head>
 
 <body onLoad="buildFlywheels()">
-<h2>Flywheel builder v1.5.4</h2>
+<h2>Flywheel builder v1.5.5</h2>
 <form name="flywheelParms" onChange="buildFlywheels()">
 <!-- Use a select for spokes so crazy numbers (like fractions) can't happen -->
 <canvas id="flywheelDemoCanvas" width="400" height="400"
@@ -124,6 +124,8 @@ instructions below to build this particular flywheel design.
 </span>
 <span class="showForCurvedSpoke">
 This is a curved spoke flywheel.  A fixture must be built to mill the curved spokes.
+This fixture must offset the center of the flywheel <b class="flydata" id="curveRadius:length">0</b>
+from the center of the RT.
 </span>
 
 <h1>Fabrication of this Flywheel</h1>
@@ -608,14 +610,18 @@ function buildFlywheels() {
 	for (i=0; i<num; i++) {
 		var ele = flydataEle[i];
 		var idparts = ele.id.split(":");	// Expect field:format
-		if (idparts[1] == "length") {
-			ele.innerHTML = fly[idparts[0]].toFixed(lendigits)
-		} else if (idparts[1] == "angle") {
-			ele.innerHTML = fly[idparts[0]].toFixed(angdigits)
-		} else if (idparts[1] == "angledms") {
-			ele.innerHTML = degreesToDMS(fly[idparts[0]].toFixed(angdigits))
-} else {
-			ele.innerHTML = "[bad id " + ele.id + "]";
+		if (fly[idparts[0]]) {
+			if (idparts[1] == "length") {
+				ele.innerHTML = fly[idparts[0]].toFixed(lendigits)
+			} else if (idparts[1] == "angle") {
+				ele.innerHTML = fly[idparts[0]].toFixed(angdigits)
+			} else if (idparts[1] == "angledms") {
+				ele.innerHTML = degreesToDMS(fly[idparts[0]].toFixed(angdigits))
+			} else {
+				ele.innerHTML = "[bad format " + ele.id + "]";
+			}
+		} else {
+			ele.innerHTML = "[undefined fly data " + ele.id + "]";
 		}
 
 	}
@@ -1616,17 +1622,13 @@ function drawFlywheelDemo(canvas, fly) {
 
 			if (spk == 0) {
 				drawCircle(flyctx, fly.outerLeftSpokeThicknessPoint, 2/flyctx.fscale, "green", "green", pattern_solid);
-				drawCircle(flyctx, fly.outerRightSpokeThicknessPoint, 2/flyctx.fscale, "green", "green", pattern_solid);
+				drawCircle(flyctx, fly.outerRightSpokeThicknessPoint, 2/flyctx.fscale, "blue", "blue", pattern_solid);
 				drawCircle(flyctx, fly.innerLeftSpokeThicknessPoint, 2/flyctx.fscale, "green", "green", pattern_solid);
-				drawCircle(flyctx, fly.innerRightSpokeThicknessPoint, 2/flyctx.fscale, "green", "green", pattern_solid);
+				drawCircle(flyctx, fly.innerRightSpokeThicknessPoint, 2/flyctx.fscale, "blue", "blue", pattern_solid);
 				drawCircle(flyctx, fly.curveCutLeftCenter, 2/flyctx.fscale, "green", "green", pattern_solid);
 				drawCircle(flyctx, fly.curveCutRightCenter, 2/flyctx.fscale, "blue", "blue", pattern_solid);
-				drawCircle(flyctx, fly.curveSpokeCenter, 2/flyctx.fscale, "black", "black", pattern_solid);
+				// drawCircle(flyctx, fly.curveSpokeCenter, 2/flyctx.fscale, "black", "black", pattern_solid);
 			}
-			/*if (spk == 0) {
-				// draw sample centerpoints for spoke 0 only.
-				// drawCircle(flyctx, curveCutRightCenter, 2/flyctx.fscale, "green", "green", pattern_solid);
-			}*/
 		} else {
 			// Straight spoke drawing.
 			
