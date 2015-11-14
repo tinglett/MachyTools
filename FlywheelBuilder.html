@@ -135,8 +135,7 @@ The flywheel can return to the lathe after performing the web cutouts if desired
 <h2>Orientation</h2>
 Note that the angles for the flywheel are dimensioned such that 0 degrees is pointing "up."  When the flywheel
 is centered on an RT on the mill, this "up" direction could be aligned with either the Y axis or the X axis.  Which
-axis is used does really matter, so the instructions from here on will be vague about this.  There may be a
-slight advantage to using X as cutting operation may be easier to see.
+axis is used does not matter, so the instructions from here on will be vague about this.
 <p>
 In these instructions spokes are numbered from 1, which is the spoke facing "up," and they go around in a clockwise
 direction.  In general the web cutouts will be performed in a clockwise direction for this reason.  If for some reason
@@ -146,8 +145,8 @@ backlash and, more importantly, confusion.
 Here are the spoke angles for this particular flywheel design.  Cuts will not be performed directly along these angles
 as these identify the centerlines of the spokes, but it should be noted that often moving from one position to another
 will span this angle increment.  <b>Hint:</b> the angles are greatly simplified if they are a multiple of the turn
-of a crank on the RT.  This may be something like 4 degrees.  The design of the flywheel can usually be tweaked so
-this is the case, and working the RT becomes much easier.
+of a crank on the RT.  This may be something like 4 degrees.   It may be productive to tweak the settings above so the
+flywheel looks nice, has the characteristics wanted, and produces angles that are easy to dial on the RT.
 <p>
 Finally, note that degrees are shown rounded to tenths.  A tenth of a degree is 6 minutes, 0 seconds.  This
 should be accurate enough for flywheel web cutouts.
@@ -201,8 +200,8 @@ Return the RT back to 0 degrees when done.
 </table>
 
 <h2>Drill the Outer Holes</h2>
-The outer holes are <b id="outTabDia">0</b> diameter.  These holes will be drilled
-at an offset <b id="outTabDist">0</b> from the center of the flywheel by
+The outer holes are <b class="flydata" id="outerHoleDiameter:length"></b> diameter.  These holes will be drilled
+at an offset <b class="flydata" id="outerHoleDistance:length"></b> from the center of the flywheel by
 shifting the center of the rotary table in X or Y.  Use care to reset the distance from the center
 as the RT was offset for the previous drilling of inner holes.  It may be best to re-center the RT
 and adjust the offset from there to avoid error.
@@ -691,16 +690,13 @@ function buildFlywheels() {
 		rightoutangle += fly.spokeAngle;
 		leftoutangle += fly.spokeAngle;
 	}
-	// Update the message under the table with actual dimensions.
-	document.getElementById("outTabDia").innerHTML = (fly.outerHoleRadius*2).toFixed(lendigits);
-	document.getElementById("outTabDist").innerHTML = fly.outerHoleDistance.toFixed(lendigits);
 	
 	if (fly.curveAngle == 0) { // QQQ: fix for curves
-	// Now fill in the instSpokeStep*Canvas figures
-	drawSpokeStep(1, document.getElementById("instSpokeStep1Canvas"), fly);
-	drawSpokeStep(2, document.getElementById("instSpokeStep2Canvas"), fly);
-	drawSpokeStep(3, document.getElementById("instSpokeStep3Canvas"), fly);
-	drawSpokeStep(4, document.getElementById("instSpokeStep4Canvas"), fly);
+		// Now fill in the instSpokeStep*Canvas figures
+		drawStraightSpokeStep(1, document.getElementById("instSpokeStep1Canvas"), fly);
+		drawStraightSpokeStep(2, document.getElementById("instSpokeStep2Canvas"), fly);
+		drawStraightSpokeStep(3, document.getElementById("instSpokeStep3Canvas"), fly);
+		drawStraightSpokeStep(4, document.getElementById("instSpokeStep4Canvas"), fly);
 	}
 	
 	// Now update the # (hash) so the URL matches the inputs
@@ -1762,7 +1758,7 @@ function drawFlywheelDims(canvas, fly) {
 }
 
 //
-// Draw the Step N figure for the spoke cutting setup.
+// Draw the Step N figure for the straight spoke cutting setup figures.
 //
 // We draw a very simplified flywheel for this.  The main idea is to show
 // what the setup movements are to avoid any chance of confusion.
@@ -1771,7 +1767,7 @@ function drawFlywheelDims(canvas, fly) {
 // spoke 1 "up".  It shows the inner/outer holes and the cut line we are
 // trying to establish.
 //
-function drawSpokeStep(step, canvas, fly) {
+function drawStraightSpokeStep(step, canvas, fly) {
 
 	/* QQQ: There are some manually coded drawing steps here that need to be fixed.
 	 */
