@@ -568,7 +568,8 @@ function buildFlywheels() {
 //	}	
 	
 	var fly = calculateFlywheel(
-			numSpokes,					// number of spokes
+			units,					// mm or in.  Hardly used, but can be ref'ed in the html.
+			numSpokes,				// number of spokes
 			flydia/2,				// radius of flywheel
 			flydia/2 - rim,			// radius of rim
 			hubdia/2,				// radius of hub
@@ -1158,7 +1159,8 @@ function drawAngDim(
  * this so it can be understood.
  */
 function calculateFlywheel(
-	numSpokes,				// 2..something reasonable.
+	units,				// mm or in.  Not really used here, but saved.
+	numSpokes,			// 2..something reasonable.
 	flywheelRadius,		// outside of flywheel in units (mm, inches, etc)
 	rimRadius,			// inside of flywheel rim
 	hubRadius,			// outside of hub
@@ -1174,6 +1176,7 @@ function calculateFlywheel(
 
 	// Return an object with a pile of fields, including the inputs
 	var fly = {
+		units:	units,
 		numSpokes: numSpokes,
 		spokeAngle: 360 / numSpokes,
 		spokeBisect: 180 / numSpokes,
@@ -1193,7 +1196,7 @@ function calculateFlywheel(
 		outerHoleRadius: outerHoleRadius,
 		outerHoleDiameter: outerHoleRadius*2,
 		outerHoleDistance: outerHoleDistance,
-		curveAngle: curveAngle,
+		curveAngle: curveAngle
 	};
 	
 	// Now calculate for spoke #0 (and web clockwise from this spoke)
@@ -1219,6 +1222,9 @@ function calculateFlywheel(
 	fly.leftInnerCenter = rotate(inpoint, fly.leftInnerAngle);
 	fly.leftOuterAngle = -outerHoleAngle + curveAngle;		// Outer hole is twisted for curved spokes
 	fly.leftOuterCenter = rotate(outpoint, fly.leftOuterAngle);
+
+	fly.outerArc = fly.outerHoleDistance + fly.outerHoleRadius;
+	fly.innerArc = fly.innerHoleDistance - fly.innerHoleRadius;
 
 	// Calculate drawing data for the web cutout.
 	// This web is to the right (clockwise) of the spoke.
@@ -1456,6 +1462,23 @@ function calculateFlywheel(
 		var rotPt = rotate(edgePt, fly.curveCutRightStartAngle);
 		fly.innerRightSpokeThicknessPoint = addPoints(fly.rightInnerCenter, rotPt);
 		fly.innerSpokeThickness = fly.curveRadius - distance(fly.curveCutLeftCenter, fly.innerRightSpokeThicknessPoint);
+		
+		// Calculate position of a location pin.
+		// This pin is fixed as 3/16 or 4.8mm depending on the units.
+		// The machinist can use a different size hole.  It's the position that matters.
+		// We need the diameter here to back it away from the outer arc.
+		if (units == "mm") {
+			fly.locationPinDiameter = 4.8;		// 4.8 mm dia
+		} else {
+			fly.locationPinDiameter = 0.188;	// 3/16" dia
+		}
+		// Place the location pin approximately half way between the outer holes.
+		fly.locationAngle = fly.spokeBisect + fly.curveAngle;
+		// Now rotate the location pin center from vertical.  Note it is inside the outerArc
+		// because we use diameter instead of radius to pull it away from the outerArc.
+		var edgePt = toPoint(0, fly.outerArc - fly.locationPinDiameter)
+		fly.locationPinCenter = rotate(edgePt, fly.locationAngle)
+		
 		// Calculate the inner left thickness point for debug.
 		var ang = angle(fly.curveCutLeftCenter, fly.innerRightSpokeThicknessPoint);
 		var edgePt = toPoint(0,fly.curveRadius);
@@ -1557,9 +1580,6 @@ function calculateFlywheel(
 		fly.cutPosition = rotate(fly.rightCutEdgeStart, fly.cutRotationAngle);
 	}
 
-	fly.outerArc = fly.outerHoleDistance + fly.outerHoleRadius;
-	fly.innerArc = fly.innerHoleDistance - fly.innerHoleRadius;
-
 	return fly;
 }
 
@@ -1588,6 +1608,21 @@ function drawFlywheelDemo(canvas, fly) {
 	// Draw the radius lines for inner/outer hole pattern
 	drawCircle(flyctx, center, fly.innerHoleDistance, "red", fill_none, pattern_dot);
 	drawCircle(flyctx, center, fly.outerHoleDistance, "red", fill_none, pattern_dot);
+	
+	if (fly.curveAngle) {
+		//drawCircle(flyctx, fly.outerLeftSpokeThicknessPoint, 2/flyctx.fscale, "green", "green", pattern_solid);
+		//drawCircle(flyctx, fly.outerRightSpokeThicknessPoint, 2/flyctx.fscale, "blue", "blue", pattern_solid);
+		//drawCircle(flyctx, fly.innerLeftSpokeThicknessPoint, 2/flyctx.fscale, "green", "green", pattern_solid);
+		//drawCircle(flyctx, fly.innerRightSpokeThicknessPoint, 2/flyctx.fscale, "blue", "blue", pattern_solid);
+		// drawCircle(flyctx, fly.curveSpokeCenter, 2/flyctx.fscale, "black", "black", pattern_solid);
+
+		drawCircle(flyctx, fly.curveCutLeftCenter, 2/flyctx.fscale, "green", "green", pattern_solid);
+		drawCircle(flyctx, fly.curveCutRightCenter, 2/flyctx.fscale, "blue", "blue", pattern_solid);
+
+		drawCircle(flyctx, fly.locationPinCenter, fly.locationPinDiameter/2, "lightgray", fill_none, pattern_solid);
+		drawCircle(flyctx, fly.locationPinCenter, 1/flyctx.fscale, "black", "black", pattern_solid);
+		drawCircle(flyctx, center, 1/flyctx.fscale, "black", "black", pattern_solid);
+	}
 
 	// Loop through the spokes and draw stuff using the spkinfo.
 	// Note that the info for spoke position N refers to detail clockwise
@@ -1641,15 +1676,6 @@ function drawFlywheelDemo(canvas, fly) {
 					fly.curveCutLeftStartAngle + thisangle, fly.curveCutLeftEndAngle + thisangle,
 					"black", pattern_solid)
 
-			if (spk == 0) {
-				drawCircle(flyctx, fly.outerLeftSpokeThicknessPoint, 2/flyctx.fscale, "green", "green", pattern_solid);
-				drawCircle(flyctx, fly.outerRightSpokeThicknessPoint, 2/flyctx.fscale, "blue", "blue", pattern_solid);
-				drawCircle(flyctx, fly.innerLeftSpokeThicknessPoint, 2/flyctx.fscale, "green", "green", pattern_solid);
-				drawCircle(flyctx, fly.innerRightSpokeThicknessPoint, 2/flyctx.fscale, "blue", "blue", pattern_solid);
-				drawCircle(flyctx, fly.curveCutLeftCenter, 2/flyctx.fscale, "green", "green", pattern_solid);
-				drawCircle(flyctx, fly.curveCutRightCenter, 2/flyctx.fscale, "blue", "blue", pattern_solid);
-				// drawCircle(flyctx, fly.curveSpokeCenter, 2/flyctx.fscale, "black", "black", pattern_solid);
-			}
 		} else {
 			// Straight spoke drawing.
 			
