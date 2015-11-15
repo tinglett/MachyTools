@@ -119,13 +119,18 @@ This is a 4-hole web cutout.  Use an inner hole angle of <b class="flydata" id="
 This is a straight spoke flyweel.  The rotary table must be rotated <b class="flydata" id="cutRotationAngle:angle">0</b>
  (<span class="flydata" id="cutRotationAngle:angledms">0</span>)
 degrees clockwise to bring the spoke edge parallel to the mill axis.  The table must be offset by
-x=<b class="flydata" id="cutPositionx:length">0</b> plus half the cutter diameter.  See the step-by-step
+x=<b class="flydata" id="cutPosition.x:length">0</b> plus half the cutter diameter.  See the step-by-step
 instructions below to build this particular flywheel design.
 </span>
 <span class="showForCurvedSpoke">
 This is a curved spoke flywheel.  A fixture must be built to mill the curved spokes.
 This fixture must offset the center of the flywheel <b class="flydata" id="curveRadius:length">0</b>
 from the center of the RT.
+The left cut center is
+(<span class="flydata" id="curveCutLeftCenter.x:length">0</span>,<span class="flydata" id="curveCutLeftCenter.y:length">0</span>)
+and the right cut center is
+(<span class="flydata" id="curveCutRightCenter.x:length">0</span>,<span class="flydata" id="curveCutRightCenter.y:length">0</span>)
+from the flywheel hub center.
 </span>
 
 <h1>Fabrication of this Flywheel</h1>
@@ -138,8 +143,9 @@ The flywheel can return to the lathe after performing the web cutouts if desired
 
 <h2>Orientation</h2>
 Note that the angles for the flywheel are dimensioned such that 0 degrees is pointing "up."  When the flywheel
-is centered on an RT on the mill, this "up" direction could be aligned with either the Y axis or the X axis.  Which
-axis is used does not matter, so the instructions from here on will be vague about this.
+is centered on an RT on the mill, this "up" direction could be aligned with either the Y axis or the X axis.
+These instructions will assume "up" is the Y dimension, so on a typical mill the flywheel will be oriented so that
+right/left when the RT is zeroed is along the X axis.
 <p>
 In these instructions spokes are numbered from 1, which is the spoke facing "up," and they go around in a clockwise
 direction.  In general the web cutouts will be performed in a clockwise direction for this reason.  If for some reason
@@ -147,10 +153,9 @@ your rotary table works better counterclockwise, there is no reason that can't b
 backlash and, more importantly, confusion.
 <p>
 Here are the spoke angles for this particular flywheel design.  Cuts will not be performed directly along these angles
-as these identify the centerlines of the spokes, but it should be noted that often moving from one position to another
-will span this angle increment.  <b>Hint:</b> the angles are greatly simplified if they are a multiple of the turn
-of a crank on the RT.  This may be something like 4 degrees.   It may be productive to tweak the settings above so the
-flywheel looks nice, has the characteristics wanted, and produces angles that are easy to dial on the RT.
+as these identify the relative angles of the spokes, but it should be noted that often moving from one position to another
+will span this angle increment. The spoke angles shown in this table are simply
+based on the number of spokes.  They are always very large multiples of degrees and easy to dial on any RT.
 
 <table id="spokeTable"  style="text-align: right; width: 10em;">
 <caption><b>Table 1: Spoke angles</b></caption>
@@ -231,7 +236,7 @@ degrees clockwise, which is a setting specific to this particular
 flywheel design.  See the figure below for this clockwise rotation for <b>Step 2</b>.
 The cut on the left side of the end mill should now be in
 line to make this cut, except that the X or Y needs to be offset
-by <b class="flydata" id="cutPositionx:length">0</b> to account for the spoke thickness.
+by <b class="flydata" id="cutPosition.x:length">0</b> to account for the spoke thickness.
 See the figure below for this sideways shift in <b>Step 3</b>.
 Again, this
 offset is specific to this flywheel design.  This offset must be further
@@ -283,7 +288,7 @@ Now back up the RT by advancing clockwise <b class="flydata" id="returnRotationA
 (<span class="flydata" id="returnRotationAngle:angledms">0</span>) degrees.
 Now the right side of the end mill should be
 in line to make this cut, except that the X or Y needs to be offset the other way
-by <b class="flydata" id="cutPositionx:length">0</b> to account for the spoke thickness.  And again,
+by <b class="flydata" id="cutPosition.x:length">0</b> to account for the spoke thickness.  And again,
 account for the end mill diameter by adjusting further for half the cutter diameter.
 <p>
 As before, lower the mill head without plunging into either hole and verify
@@ -610,15 +615,34 @@ function buildFlywheels() {
 	for (i=0; i<num; i++) {
 		var ele = flydataEle[i];
 		var idparts = ele.id.split(":");	// Expect field:format
-		if (fly[idparts[0]]) {
-			if (idparts[1] == "length") {
-				ele.innerHTML = fly[idparts[0]].toFixed(lendigits)
-			} else if (idparts[1] == "angle") {
-				ele.innerHTML = fly[idparts[0]].toFixed(angdigits)
-			} else if (idparts[1] == "angledms") {
-				ele.innerHTML = degreesToDMS(fly[idparts[0]].toFixed(angdigits))
-			} else {
-				ele.innerHTML = "[bad format " + ele.id + "]";
+		var field = idparts[0]
+		var fmt = idparts[1]
+		var fieldparts = field.split(".")
+		var val;
+		switch (fieldparts.length) {	// handle fly.myfield and fly.myfield.xyz
+			case 1:
+				val = fly[fieldparts[0]]
+				break
+			case 2:
+				if (fly[fieldparts[0]]) {
+					val = fly[fieldparts[0]][fieldparts[1]]
+				}
+				break
+		}
+		if (val) {
+			switch (fmt) {
+				case "length":
+					ele.innerHTML = val.toFixed(lendigits)
+					break
+				case "angle":
+					ele.innerHTML = val.toFixed(angdigits)
+					break
+				case "angledms":
+					ele.innerHTML = degreesToDMS(val.toFixed(angdigits))
+					break
+				default:
+					ele.innerHTML = "[bad format " + ele.id + "]"
+					break
 			}
 		} else {
 			ele.innerHTML = "[undefined fly data " + ele.id + "]";
@@ -759,7 +783,7 @@ function degreesToDMS(d) {
 			min = 0;
 		}
 	}
-	return deg.toFixed(0) + "\xB0" + min.toFixed(0) + "'" + sec + "''";
+	return deg.toFixed(0) + DEGSYM + min.toFixed(0) + "'" + sec + "''";
 }
 
 // Many functions want a point.  Trivially construct a point object.
@@ -1531,13 +1555,10 @@ function calculateFlywheel(
 		if (fly.returnRotationAngle == 360)
 			fly.returnRotationAngle = 0;	// more sane
 		fly.cutPosition = rotate(fly.rightCutEdgeStart, fly.cutRotationAngle);
-		fly.cutPositionx = fly.cutPosition.x;	// needed for doc substitution
-		fly.cutPositiony = fly.cutPosition.y;	// needed for doc substitution
-		fly.outerArc = fly.outerHoleDistance + fly.outerHoleRadius;
-		fly.innerArc = fly.innerHoleDistance - fly.innerHoleRadius;
 	}
 
-
+	fly.outerArc = fly.outerHoleDistance + fly.outerHoleRadius;
+	fly.innerArc = fly.innerHoleDistance - fly.innerHoleRadius;
 
 	return fly;
 }
