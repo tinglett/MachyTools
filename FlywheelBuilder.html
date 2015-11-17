@@ -59,6 +59,9 @@ Your browser does not support the canvas element.  Sorry, this web page won't wo
 <canvas id="flywheelDimsCanvas" width="400" height="400"
   style="border:1px solid #d3d3d3;">
 </canvas>
+<canvas id="flywheelDebugCanvas" width="400" height="400"
+  style="border:1px solid #d3d3d3;">
+</canvas>
 <p><b>Dimensions:   </b>
 Spokes: <select id="flywheelSpokes">
 		<option value="3">3</option>
@@ -591,7 +594,9 @@ function buildFlywheels() {
 	drawFlywheelDemo(canvas, fly);
 	var canvasdims = document.getElementById("flywheelDimsCanvas");
 	drawFlywheelDims(canvasdims, fly);
-	
+	var canvasdebug = document.getElementById("flywheelDebugCanvas");
+	drawFlywheelDebug(canvasdebug, fly);
+
 	// Now customize the instructions for this flywheel.
 	
 	// First thing, enable/hide anything in the document based on curve/straight or
@@ -1619,7 +1624,6 @@ function drawFlywheelDemo(canvas, fly) {
 		drawCircle(flyctx, fly.curveCutLeftCenter, 2/flyctx.fscale, "green", "green", pattern_solid);
 		drawCircle(flyctx, fly.curveCutRightCenter, 2/flyctx.fscale, "blue", "blue", pattern_solid);
 
-		drawCircle(flyctx, fly.locationPinCenter, fly.locationPinDiameter/2, "lightgray", fill_none, pattern_solid);
 		drawCircle(flyctx, fly.locationPinCenter, 1/flyctx.fscale, "black", "black", pattern_solid);
 		drawCircle(flyctx, center, 1/flyctx.fscale, "black", "black", pattern_solid);
 	}
@@ -1676,6 +1680,10 @@ function drawFlywheelDemo(canvas, fly) {
 					fly.curveCutLeftStartAngle + thisangle, fly.curveCutLeftEndAngle + thisangle,
 					"black", pattern_solid)
 
+			var pinCenter = rotate(fly.locationPinCenter, thisangle);
+			drawCircle(flyctx, pinCenter, fly.locationPinDiameter/2, "black", fill_none, pattern_solid);
+
+
 		} else {
 			// Straight spoke drawing.
 			
@@ -1718,6 +1726,122 @@ function drawFlywheelDemo(canvas, fly) {
 		// Advance to next spoke angle for next iteration
 		thisangle += fly.spokeAngle;
 	}
+}
+
+function drawFlywheelDebug(canvas, fly) {
+
+	var flyctx = makeDrawingContext(canvas, fly.flywheelRadius);
+	var center = toPoint(0,0);
+
+	/* First, draw dim demo by drawing a transparent white rectangle over it.  Cool, no? :) */
+	drawFlywheelDemo(canvas, fly)
+	flyctx.context.save();
+	flyctx.context.fillStyle="white";
+	flyctx.context.globalAlpha="0.65";
+	flyctx.context.fillRect(0,0,canvas.width,canvas.height);
+	flyctx.context.restore();
+	
+	/* Compute and label 4 points for the fixture plan */
+	// Point A:  The flywheel center (easy, 0,0)
+	// Point B:  The location pin position locationPinCenter
+	// Point C:  The left spoke radius center.   curveCutLeftCenter
+	// Point D:  The right spoke radius center.  curveCutRightCenter
+	
+	// figure out the base point for the fixture.  Is B, C or D lower?
+	var basePt;
+	if (fly.curveCutLeftCenter.y < fly.curveCutRightCenter.y) {
+		basePt = fly.curveCutLeftCenter;
+	} else {
+		basePt = fly.curveCutRightCenter;
+	}
+	if (fly.locationPinCenter.y < basePt.y) {
+		basePt = fly.locationPinCenter;
+	}
+	
+	console.log("before: B=" + ptStr(fly.locationPinCenter) + " C=" + ptStr(fly.curveCutLeftCenter) + " D=" + ptStr(fly.curveCutRightCenter)
+			+ " base=" + ptStr(basePt))
+	console.log(" before:  AB=" + distance(toPoint(0,0), fly.locationPinCenter) + " BC=" + distance(fly.locationPinCenter, fly.curveCutLeftCenter)
+		+ " AC=" + distance(toPoint(0,0), fly.curveCutLeftCenter) + " BD=" + distance(fly.locationPinCenter, fly.curveCutRightCenter)
+		+ " AD=" + distance(toPoint(0,0), fly.curveCutRightCenter))
+	console.log(" before CD=" + distance(fly.curveCutLeftCenter, fly.curveCutRightCenter))
+	
+	// Now rotate everything so ptA to basePt is a horizontal line (90 degrees).
+	// basePt.x > ptA.x always.  The angle of rotation is usually negative
+	// so we need to rotate counter-clockwise, but not always.
+	var ptA = toPoint(0,0)
+	var ang = 90 - angle(ptA, basePt)
+	console.log("ang=" + ang)
+	var ptB = rotate(fly.locationPinCenter, ang)
+	var ptC = rotate(fly.curveCutLeftCenter, ang)
+	var ptD = rotate(fly.curveCutRightCenter, ang)
+	
+	console.log("after: B=" + ptStr(ptB) + " C=" + ptStr(ptC) + " D=" + ptStr(ptD)
+			+ " base=" + ptStr(basePt))
+	console.log(" before:  AB=" + distance(ptA, ptB) + " BC=" + distance(ptB, ptC)
+		+ " AC=" + distance(ptA, ptC) + " BD=" + distance(ptB, ptD)
+		+ " AD=" + distance(ptA, ptD))
+
+	// Now calculate a bounding box for the points.  The fixture must be bigger than this.
+	// We know the baseline is along y=0.  Also x>=0.  So ptA is the bottom left of this box.
+	// Find the bound point (upper right)
+	var bound = ptB;	// start here
+	if (ptC.x > bound.x) {
+		bound.x = ptC.x;
+	}
+	if (ptD.x > bound.x) {
+		bound.x = ptD.x;
+	}
+	if (ptC.y > bound.y) {
+		bound.y = ptC.y;
+	}
+	if (ptD.y > bound.y) {
+		bound.y = ptD.y;
+	}
+	console.log("bound=" + ptStr(bound))
+	
+	// Add 1/2" or 10mm for working room.  May not be needed, but this isn't much.
+	var slack = 0.5;	// inches
+	if (fly.units == "mm") {
+		slack = 10;	// mm
+	}
+	
+	// Now estimate a fixture size.  We'll start by using a fraction of the flywheel.
+	// The flywheel center is toward the lower left of the fixture.  We'll recommend a fixture
+	// starting with 75% of the flywheel diameter as a square.  Then check that all the points fit.
+	// If not, extend and include some extra material.  We could round to 1/2 inch or 10mm.
+	// We assume the flywheel center (0,0) as inland 25% of the way on the bottom and left.
+	// So the "working" area of the fixture is only 50% -- the flywheel radius.
+	var recommend = toPoint(fly.flywheelRadius, fly.flywheelRadius)
+	if (bound.x+slack > recommend.x) {
+		recommend.x = bound.x+slack
+	}
+	if (bound.y+slack > recommend.y) {
+		recommend.y = bound.y+slack
+	}
+	// Now add the extra 25% on the other side of the flywheel (negative X and Y)
+	var recommendOffset = toPoint(fly.flywheelRadius/2, fly.flywheelRadius/2)
+	recommend = addPoints(recommend, recommendOffset)
+	
+	console.log("recommend=" + ptStr(recommend) + "  offset=" + ptStr(recommendOffset))
+	
+	// Now rotate this bounding box to match the figure so we can draw it.  The rotation is -ang.
+	// Call the corners JKLM, starting with J=bottom-left and going clockwise.
+	var ptJ = rotate(subtractPoints(recommendOffset, toPoint(0,0)), -ang)
+	var ptK = rotate(subtractPoints(recommendOffset, toPoint(0,recommend.y)), -ang)
+	var ptL = rotate(subtractPoints(recommendOffset, recommend), -ang)
+	var ptM = rotate(subtractPoints(recommendOffset, toPoint(recommend.x, 0)), -ang)
+	console.log("J=" + ptStr(ptJ) + " K=" + ptStr(ptK) + " L=" + ptStr(ptL) + " M=" + ptStr(ptM))
+	
+	drawLine(flyctx, ptJ, ptK, "black", pattern_solid);
+	drawLine(flyctx, ptK, ptL, "black", pattern_solid);
+	drawLine(flyctx, ptL, ptM, "black", pattern_solid);
+	drawLine(flyctx, ptM, ptJ, "black", pattern_solid);
+
+	drawCircle(flyctx, fly.curveCutLeftCenter, 2/flyctx.fscale, "green", "green", pattern_solid);
+	drawCircle(flyctx, fly.curveCutRightCenter, 2/flyctx.fscale, "blue", "blue", pattern_solid);
+	drawCircle(flyctx, fly.locationPinCenter, 1/flyctx.fscale, "black", "black", pattern_solid);
+	drawCircle(flyctx, toPoint(0,0), 1/flyctx.fscale, "black", "black", pattern_solid);
+
 }
 
 /*
