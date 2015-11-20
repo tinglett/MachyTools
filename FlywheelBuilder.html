@@ -59,9 +59,6 @@ Your browser does not support the canvas element.  Sorry, this web page won't wo
 <canvas id="flywheelDimsCanvas" width="400" height="400"
   style="border:1px solid #d3d3d3;">
 </canvas>
-<canvas id="flywheelDebugCanvas" width="400" height="400"
-  style="border:1px solid #d3d3d3;">
-</canvas>
 <p><b>Dimensions:   </b>
 Spokes: <select id="flywheelSpokes">
 		<option value="3">3</option>
@@ -117,15 +114,15 @@ The inner spoke thickness is <b class="flydata" id="innerSpokeThickness:length">
 thickness is <b class="flydata" id="outerSpokeThickness:length">0</b>.
 <span class="showFor4HoleSpoke">
 This is a 4-hole web cutout.  Use an inner hole angle of <b class="flydata" id="spokeBisect:angle"></b> to have a 3-hole web cutout.</span>
-<p>
-<span class="showForStraightSpoke">
+
+<p class="showForStraightSpoke">
 This is a straight spoke flyweel.  The rotary table must be rotated <b class="flydata" id="cutRotationAngle:angle">0</b>
  (<span class="flydata" id="cutRotationAngle:angledms">0</span>)
 degrees clockwise to bring the spoke edge parallel to the mill axis.  The table must be offset by
 x=<b class="flydata" id="cutPosition.x:length">0</b> plus half the cutter diameter.  See the step-by-step
 instructions below to build this particular flywheel design.
-</span>
-<span class="showForCurvedSpoke">
+
+<p class="showForCurvedSpoke">
 This is a curved spoke flywheel.  A fixture must be built to mill the curved spokes.
 This fixture must offset the center of the flywheel <b class="flydata" id="curveRadius:length">0</b>
 from the center of the RT.
@@ -134,7 +131,6 @@ The left cut center is
 and the right cut center is
 (<span class="flydata" id="curveCutRightCenter.x:length">0</span>,<span class="flydata" id="curveCutRightCenter.y:length">0</span>)
 from the flywheel hub center.
-</span>
 
 <h1>Fabrication of this Flywheel</h1>
 This generated guide provides instructions for cutting out the web in the flywheel design shown above.
@@ -147,8 +143,8 @@ The flywheel can return to the lathe after performing the web cutouts if desired
 <h2>Orientation</h2>
 Note that the angles for the flywheel are dimensioned such that 0 degrees is pointing "up."  When the flywheel
 is centered on an RT on the mill, this "up" direction could be aligned with either the Y axis or the X axis.
-These instructions will assume "up" is the Y dimension, so on a typical mill the flywheel will be oriented so that
-right/left when the RT is zeroed is along the X axis.
+These instructions will assume "up" along the X dimension, so on a typical mill the flywheel will be oriented so
+that up/down when the RT is zeroed is along the X axis.
 <p>
 In these instructions spokes are numbered from 1, which is the spoke facing "up," and they go around in a clockwise
 direction.  In general the web cutouts will be performed in a clockwise direction for this reason.  If for some reason
@@ -170,20 +166,26 @@ There are many ways to cut out the webs of the flywheel, but this ordering works
 As mentioned earlier, it is assumed the flywheel has been faced and trepanned on the lathe, and a center bore has been
 made, whether sized for the final axle or not, so that the flywheel webs can be cut.  The center hole will be the key datum
 from which measurements will be made.
-<ol>
-<li>Drill the leftmost inner holes for the cutouts.
-<li>Drill the rightmost inner holes for the cutouts (if there are any -- 3-hole cutouts are common).
+<ul>
+<li class="showFor3HoleSpoke">Drill the inner holes for the cutouts.
+<li class="showFor4HoleSpoke">Drill the leftmost inner holes for the cutouts.
+<li class="showFor4HoleSpoke">Drill the rightmost inner holes for the cutouts.
 <li>Drill the leftmost outer holes for the web cutouts.
 <li>Drill the rightmost outer holes for the web cutouts.
+<li class="showForCurvedSpoke">Drill a hole in the waste of each web cutout for a location pin for curved spoke cuts.
 <li>Cut the right (clockwise) side of each spoke.
 <li>Cut the left side of each spoke.
 <li>Cut the outer arc of the web cutout.
-<li>Cut the inner arc if it is a 4-hole cutout.
-</ol>
+<li class="showFor4HoleSpoke">Cut the inner arc
+</ul>
 
 <h2>Setup</h2>
-Center and clamp the flywheel on the RT.  The clamps must not obstruct drilling and cutting operations.
-Center the RT under the mill.  Zero the RT and mark the flywheel so it is obvious where the 0 (spoke #1) is located.
+Several of the operations will be performed on the RT while the flywheel is centered under the mill.
+Center the RT under the mill.  Center and clamp the flywheel on the RT.
+The clamps must not obstruct drilling and cutting operations, so look carefully at the outer hole positions.
+None of the spoke cutting operations require high precision, so it is reasonable to consider moving a clamp provided
+the flywheel remains well clamped by two or more other clamps when this is done.
+Zero the RT and mark the flywheel so it is obvious where the 0 (spoke #1) is located.
 Many operations will reset to this position as their first step.
 
 <h2>Drill the Inner Holes</h2>
@@ -225,40 +227,50 @@ Return the RT back to 0 degrees when done.
 <tr><th>Spoke</th><th colspan="2">Angle</th></tr>
 </table>
 
+<div class="showForCurvedSpoke">
+<h2>Drill Curved-spoke Index Location Holes</h2>
+The spoke cutting for curved spokes will eventually require the flywheel be clamped on a fixture (not yet -- keep it centered).
+The flywheel will be located in position on this fixture by the center hub hole and the location pin
+holes that are drilled in this step.  These index location holes are drilled in the
+waste material of the web and are drilled in a manner similar to the inner and outer holes.
+<p>
+These holes will be drilled at an offset <b class="flydata" id="locationPinDistance:length"></b>
+from the center of the flywheel by shifting the center of the rotary table in X or Y.
+<b>These holes can be any reasonable size</b> for a pin to mate with a corresponding hole that will be
+drilled in the fixture.  Thus, a standard rod size may be preferred.
+<p>
+The location pin hole angles are listed.
+Advancing from hole to hole is done by rotating the RT <b class="flydata" id="spokeAngle:angle"></b> degrees for each.
+Return the RT back to 0 degrees when done.
+
+<table id="locationPinTable"  style="text-align: right; width: 10em;">
+<caption><b>Table 4: Location Pin angles</b></caption>
+<tr><th>Spoke</th><th>Angle</th></tr>
+</table>
+</div><!-- end showForCurvedSpoke -->
+
 <h2>The Spoke Cutting</h2>
-At the point the "corners" of the web cutouts have been defined with drilled holes.
-Now the sides of the web cutouts along the spoke edges will be milled.  For best results,
-use an end mill equal to or smaller than the smallest hole diameter.  The mill will cut from
-an inner hole to the corresponding outer hole.
+At this point the "corners" of the web cutouts have been defined with drilled holes.
+Now the sides of the web cutouts along the spoke edges will be milled.  For the easiest operation,
+use an end mill smaller than the smallest hole diameter of inside/outside holes.
+The mill will cut from an inner hole to the corresponding outer hole.  A larger end mill may be used
+with care if a hole is particularly small, but some cleanup filing or finishing with a small end
+mill will be required to finish each cut.
+
+<div class="showForStraightSpoke">
 <p>
-To position for this cut, start with spoke number 1 by ensuring the RT is centered
-on the mill and returned to the zero position.  See the figure below for <b>Step 1</b>.
-Now rotate the RT exactly <b class="flydata" id="cutRotationAngle:angle">0</b> 
-(<span class="flydata" id="cutRotationAngle:angledms">0</span>)
-degrees clockwise, which is a setting specific to this particular
-flywheel design.  See the figure below for this clockwise rotation for <b>Step 2</b>.
-The cut on the left side of the end mill should now be in
-line to make this cut, except that the X or Y needs to be offset
-by <b class="flydata" id="cutPosition.x:length">0</b> to account for the spoke thickness.
-See the figure below for this sideways shift in <b>Step 3</b>.
-Again, this
-offset is specific to this flywheel design.  This offset must be further
-increased by half the diameter (radius) of the end mill being used to cut the
-spoke.  See the figure below for the end mill radius shift in <b>Step 4</b>.
-<b>Don't forget to account for the cutter diameter!</b>
+Cutting straight spokes requires shifting the RT under the mill and applying a rotation so
+that a side of a spoke may be cut along the X axis of the mill.  The following instructions
+provide the procedure and precise settings to do this for this particular flywheel.
+When all is set up properly, a side of a spoke can be milled by lowering the mill cutter into
+an inner hole and cutting along X until the corresponding outer hole is reached.  The flywheel
+will be rotated <b class="flydata" id="spokeAngle:angle">0</b> to the next spoke and repeated
+until a side of all spokes has been cut.  Then a new setup is made for the other side of the
+spoke, and this is repeated for the remainder of the spokes.
+
+<h3>Cut the right side of the first spoke</h3>
 <p>
-Before cutting, lower the mill head without plunging into either hole and verify
-the cutter will cut from the left side of the inner hole to the left side of the
-outer hole.  If all looks good, note the current Y (or X) position and slightly
-increase the distance.  Now the cut can be made, potentially in multiple depth
-passes depending on the capability of the mill.  Once it is completely cut
-through, reset Y (or X) and make the final finish pass at the exact offset.
-<p>
-This cut the right side of spoke number 1.  Now use the RT to rotate past spoke
-number 2 and do the same cut to the right of that spoke.  This will be a simple
-<b class="flydata" id="spokeAngle:angle">0</b> degree rotation from the current cut for this flywheel
-design.  Don't change other settings, except jog the Y (or X) for the rough
-cut vs. the finish cut.  Repeat until all the right sides of the spokes are cut.
+The following figures will be referenced in the step-by-step instructions that follow.
 <p>
 <div style="float:left;">
 <canvas id="instSpokeStep1Canvas" width="200" height="200"
@@ -286,21 +298,185 @@ cut vs. the finish cut.  Repeat until all the right sides of the spokes are cut.
 </div>
 <br style="clear: both">
 <p>
+To position for this cut, start with spoke number 1 by ensuring the RT is centered
+on the mill and returned to the zero position.  See the figure for <b>Step 1</b>.
+<p>
+Now rotate the RT exactly <b class="flydata" id="cutRotationAngle:angle">0</b> 
+(<span class="flydata" id="cutRotationAngle:angledms">0</span>)
+degrees clockwise, which is a setting specific to this particular
+flywheel design.  See the figure for this clockwise rotation for <b>Step 2</b>
+and observe that this rotation brings the cut line (shown in red) in parallel with the X axis (up/down).
+<p>
+Now Y needs to be offset
+by <b class="flydata" id="cutPosition.x:length">0</b> to account for the spoke thickness.
+See the figure for this sideways shift in <b>Step 3</b>.
+Again, this
+offset is specific to this flywheel design.  This offset must be further
+increased by half the diameter (radius) of the end mill being used to cut the
+spoke.  See the figure for the end mill radius shift in <b>Step 4</b>.
+<b>Don't forget to account for the cutter diameter!</b>
+<p>
+Before cutting, lower the mill head without plunging into either hole and verify
+the cutter will cut from the left side of the inner hole to the left side of the
+outer hole.  If all looks good, note the current Y position and slightly
+increase the distance.  Now the cut can be made, potentially in multiple depth
+passes depending on the capability of the mill.  Once it is completely cut
+through, reset Y and make the final finish pass at the exact offset.
+This offset should precisely cut from the edge of the inner hole to the edge of
+the outer hole.
+
+<h3>Cut the right side of the rest of the spokes</h3>
+<p>
+This cut the right side of spoke number 1.  Now use the RT to rotate past spoke
+number 2 and do the same cut to the right of that spoke.  This will be a simple
+<b class="flydata" id="spokeAngle:angle">0</b> degree rotation from the current cut for this flywheel
+design.  <b>Don't change other settings,</b> except jog the Y for the rough
+cut vs. the finish cut as was done for spoke 1.  Repeat until all the right sides of the spokes are cut.
+
+<h3>Cut the left side of the spokes</h3>
+<p>
 Now the left side of each spoke must be cut.  <b>Return the RT back to zero.</b>
 Now back up the RT by advancing clockwise <b class="flydata" id="returnRotationAngle:angle">0</b> 
 (<span class="flydata" id="returnRotationAngle:angledms">0</span>) degrees.
 Now the right side of the end mill should be
-in line to make this cut, except that the X or Y needs to be offset the other way
+in line to make this cut, except that the Y needs to be offset <i>the other way</i>
 by <b class="flydata" id="cutPosition.x:length">0</b> to account for the spoke thickness.  And again,
-account for the end mill diameter by adjusting further for half the cutter diameter.
+account for the end mill diameter by adjusting <i>further away</i> for half the cutter diameter.
 <p>
 As before, lower the mill head without plunging into either hole and verify
 the cutter will cut from the right side of the inner hole to the right side of the
-outer hole.  If all looks good, note the current Y (or X) position and slightly
+outer hole.  If all looks good, note the current Y position and slightly
 increase the distance.  Now the cut can be made, potentially in multiple depth
 passes depending on the capability of the mill.  Once it is completely cut
-through, reset Y (or X) and make the final finish pass at the exact offset.
+through, reset Y and make the final finish pass at the exact offset.
 Repeat until all the left sides of the spokes are cut.
+</div><!-- end showForStraightSpoke -->
+
+<div class="showForCurvedSpoke">
+<p>
+Cutting curved spokes requires the construction of a fixture to hold the flywheel in position
+so the RT may be used to sweep out the arc to be cut by the mill on the left (outside) and right (inside)
+of each spoke.  The fixture positions the flywheel by the center hub hole and a location pin hole
+drilled earlier in each waste area of the web cutout.
+<p>
+Note that the flywheel may be removed from the RT at this time.  It may be useful to experiment with
+the flywheel blank in order to create a fixture of a size that fits well on the RT.
+<h3>The cutting fixture</h3>
+<p>
+The fixture is a metal plate.  The thickness of the plate doesn't particularly matter unless the
+flywheel is offset off the edge of the RT in which case the fixture must be rigid enough to
+support the cutting operation.  If the entire assembly rests on the RT, the main concern is that holes
+in the plate be reasonable enough to locate pins.  Sheet metal probably won't do.
+<p>
+The following figures show the fixture layout and how the fixture will be placed under the flywheel
+for a cutting operation.
+
+<div style="float:left;">
+<canvas id="fixtureLayoutFigure" width="300" height="200"
+  style="border:1px solid #d3d3d3;">
+</canvas>
+<br><b>Fixture Layout</b>
+</div>
+<div style="float:left;">
+<canvas id="fixturePlacementFigure" width="300" height="200"
+  style="border:1px solid #d3d3d3;">
+</canvas>
+<br><b>Fixture Position for Cut</b>
+</div>
+<br style="clear: both">
+<p>
+Relative positions for the locations in the fixture layout are provided in this table.  It can be seen
+that these are all relative to point <b>A</b> so they will need to be shifted inland onto the fixture plate.
+
+<table style="text-align: right; width: 10em;">
+<caption><b>Table 5: Fixture layout locations</b></caption>
+<tr><th>Point</th><th>X</th><th>Y</th></tr>
+<tr><td>A</td><td class="flydata" id="fixtureA.x:length">0</td><td class="flydata" id="fixtureA.y:length">0</td></tr>
+<tr><td>B</td><td class="flydata" id="fixtureB.x:length">0</td><td class="flydata" id="fixtureB.y:length">0</td></tr>
+<tr><td>C</td><td class="flydata" id="fixtureC.x:length">0</td><td class="flydata" id="fixtureC.y:length">0</td></tr>
+<tr><td>D</td><td class="flydata" id="fixtureD.x:length">0</td><td class="flydata" id="fixtureD.y:length">0</td></tr>
+</table>
+
+<p>
+Point <b>A</b> is the center of the flywheel and point <b>B</b> is for a location pin to align the flywheel on the
+fixture for accurate clamping.  The fixture in the diagram is shown with a width of
+<b class="flydata" id="fixtureSize.x:length">0</b>, a height of <b class="flydata" id="fixtureSize.y:length">0</b>,
+and the relative position of point A is offset
+(<b class="flydata" id="fixtureOffset.x:length">0</b>,<b class="flydata" id="fixtureOffset.x:length">0</b>) from the
+lower left corner.  The fixture plate can vary considerably from these dimensions as long as the flywheel can be
+supported and clamped.  Note that if the flywheel is not hanging off the edge of the flywheel, shims the thickness of
+the plate can be used for clamping to allow a narrower/shorter plate to be used.
+<p>
+Points <b>C</b> and <b>D</b> will be used as centering points for the fixture+flywheel to be centered on the RT.
+Keep this in mind when laying out the size of the fixture.  These points will be centered on the RT, so the flywheel
+could be hanging off the edge of a small RT.  Points <b>C</b> and <b>D</b> might simply be punched so the fixture
+can be centered and clamped to the RT at one of the points.  Alternatively, these might be holes that fit an
+alignment fitting that fits in the center of the RT.  Note that these points may be close together.
+<p>
+Note that many holes have already been drilled in the flywheel, and these might be leveraged for clamping.
+Simply create the fixture with pins installed at points A and B such that the flywheel fits without play.  Once the
+flywheel is positioned, the holes can be transfered to the fixture plate with center punches.  They may be drilled
+and tapped for clamping bolts if the fixture plate is of a substantial thickness.
+<p>
+One final note on the fixture is that the cutting operations shouldn't cut into the fixture plate, so it may be
+reused for other purposes, including as a fixture plate for other flywheels.  The point locations will
+differ for different designs, but they might be shifted to avoid interference with previously drilled holes.
+
+<h3>Cut the right side of the first curved spoke</h3>
+An arc radius of <b class="flydata" id="curveRadius:length">0</b> will be used for cutting all the spokes.
+This same arc radius is used for both the right and left sides of the spokes, but the center point on the fixture
+will be different.  The right cut will cut the line as shown in the following figure.
+<p>
+<canvas id="fixtureRightCutPlacementFigure" width="300" height="200"
+  style="border:1px solid #d3d3d3;">
+</canvas>
+<p>
+Center the RT under the mill head.  Now center point <b>D</b> of the fixture plate onto the center of the RT and
+clamp the fixture leaving room to allow the flywheel to be later placed without removing all the
+clamps.  This could be done with a minimal set of clamps because the flywheel will eventually be clamped down
+and this should provide more cutting support.  For now leave the flywheel off.  The RT will be rotated for cuts so
+the RT need not be zeroed nor does the fixture need to be aligned along X or Y.  Angle readings won't be used.
+<p>
+Next, shift the RT in X to account for the cutting radius of <b class="flydata" id="curveRadius:length">0</b>
+<b>less half the cutting diameter of the end mill.</b>  Place the flywheel hub on the pin at point <b>A</b> on the
+fixture and with the first spoke's location pin hole over the location pin at point <b>B</b>.  <b>Clamp the flywheel.</b>
+Without running the mill, verify it can plunge into the inner hole and sweep to the outer hole.
+<p>
+For the cut, shift the RT a tiny bit more in X away from the spoke edge.  Now run the mill using the RT to sweep out the
+cut.  This could be performed in multiple depth passes depending on the capability of the mill.  Finally, shift the RT back
+to the exact radius, <b>still accounting for half the cutting diameter</b>, and run the final pass.  It should
+intersect the inner and outer hole edges perfectly.
+
+<h3>Cut the right side of the rest of the curved spokes</h3>
+Now that the right side (inside) of the first spoke is cut, the right sides of the rest of the spokes need to be cut.
+<p>
+To do this, leave the RT position as-is.  Unclamp the flywheel being very careful not to disturb the centered position
+of the fixture on the RT.  This means at least one clamp must be holding it down unless another method has been
+arranged to keep it centered.  Carefully lift the flyweel off pins <b>A</b> and <b>B</b>, rotate it to the next spoke position,
+drop it back on pins <b>A</b> and <b>B</b> in this position, and clamp it down again.  Now it should be ready for
+the next spoke cut.  Without powering the mill, check that this is true.
+<p>
+Now, as before, shift the mill slightly away from the spoke in X and make the rough cut using multiple passes to get
+to depth.  Then shift the mill back to the correct X and make the final pass.   Repeat this procedure for the right
+side of all the spokes.
+
+<h3>Cut the left side of the curved spokes</h3>
+The left (outer) sides of each spoke are cut in a similar manner to the right side.  To prepare for this, unclamp the
+fixture from the RT and now center point <b>C</b> on the RT.  To do this, re-center the RT under the mill head, center and
+clamp the fixture on point <b>C</b>, and then move the RT along X for the <b class="flydata" id="curveRadius:length">0</b>
+radius.  This time <b>it must be <i>increased</i> by half the cutter radius</b> so the cutter cuts on the inside of the arc.
+The left cut is shown in the following figure.
+<p>
+<canvas id="fixtureLeftCutPlacementFigure" width="300" height="200"
+  style="border:1px solid #d3d3d3;">
+</canvas>
+<p>
+As before, place the flywheel on the fixture and clamp it down.  Without power, make sure the mill will correctly sweep
+out the outside edge of the spoke and connects correctly with the inside edges of the inner/outer spoke holes.  Once this
+looks correct, move it out a little more for the rough passes and make the cut.  Return to the correct radius,
+<b>still accounting for half the cutting radius</b> and make the final pass.   Repeat this for each spoke.
+</div><!-- end showForCurvedSpoke -->
+
 <p>
 The difficult part is done!
 
@@ -314,7 +490,7 @@ Return the RT so that it and the flywheel are centered under the mill.
 The inner arc is at <b class="flydata" id="innerArc:length">0</b>.
 This is the inner hole center distance of <b class="flydata" id="innerHoleDistance:length">0</b>
 less the radius of the inner hole which is <b class="flydata" id="innerHoleRadius:length">0</b>. 
-Offset X (or Y) by this amount as well as an additional distance to account for the end mill radius.
+Offset X (or Y) by this amount <b>as well as an additional distance to account for the end mill radius.</b>
 Make the cut for each web being very careful NOT to cut through a spoke!
 </span>
 <p>
@@ -323,8 +499,8 @@ are centered under the mill. The outer arc of the web is at
 <b class="flydata" id="outerArc:length">0</b> from the flywheel center.
 This is the outer hole center distance of <b class="flydata" id="outerHoleDistance:length">0</b> plus
 the radius of the outer hole which is  <b class="flydata" id="outerHoleRadius:length">0</b>.
-Offset X (or Y) by this amount, but reduced to account
-for the end mill radius. Make the cut for each web being very careful NOT
+Offset X (or Y) by this amount, <b>but reduced to account
+for the end mill radius.</b> Make the cut for each web being very careful NOT
 to cut through a spoke!
 <p>
 That's it.  The flywheel may be removed from the
@@ -471,12 +647,80 @@ var lendigits = 0;		// will be 3 for inches and 2 for mm
 	var offElements = document.getElementsByClassName(offHTMLclass);
 	var i;
 	for (i=0; i<onElements.length; i++) {
-		onElements[i].style.display = "inline";
+		// Sadly, there isn't a value that works for all tags.
+		switch (onElements[i].tagName) {
+			case "LI":
+				onElements[i].style.display = "list-item"
+				break
+			case "P":
+				onElements[i].style.display = "block"
+				break
+			default:
+				onElements[i].style.display = "inline"
+				break
+		}
 	}
 	for (i=0; i<offElements.length; i++) {
 		offElements[i].style.display = "none";
 	}
  }
+
+ /*
+  * doHTMLSubstitutions(HTMLclass, obj)
+  *
+  * Do some general substitutions of data from the given object.
+  * Any element of the doc with class=HTMLclass will have the content substituted.
+  *
+  * The id of the element defines what data will be extracted from the provided object.
+  * Note that this has the potential that multiple elements in the document have the same id.
+  * But that's ok, because we iterate through them by class and never look them up by id.
+  * If we find browsers get picky about this, we could append a suffix _goop and remove it
+  * before doing the lookup.
+  *
+  * The id must be in the format "field:fmt" where obj.field will be formatted given
+  * specific formatting types.  For convenience, "field.subfield:fmt" is also allowed.
+  * A format is required.  See the switch below for what is supported.
+  */
+function doHTMLSubstitutions(HTMLclass, obj) {
+	var dataEle = document.getElementsByClassName(HTMLclass)
+	var i
+	for (i=0; i<dataEle.length; i++) {		// enumerate the class=HTMLclass elements
+		var ele = dataEle[i]
+		var idparts = ele.id.split(":")		// Expect field:format
+		var field = idparts[0]
+		var fmt = idparts[1]
+		var fieldparts = field.split(".")
+		var val
+		if (fieldparts[0] in obj) {
+			switch (fieldparts.length) {		// handle obj.field and obj.field.subfield
+				case 1:
+					val = obj[fieldparts[0]]
+					break
+				case 2:
+					if (obj[fieldparts[0]]) {
+						val = obj[fieldparts[0]][fieldparts[1]]
+					}
+					break
+			}
+			switch (fmt) {
+				case "length":
+					ele.innerHTML = val.toFixed(lendigits)
+					break
+				case "angle":
+					ele.innerHTML = val.toFixed(angdigits)
+					break
+				case "angledms":
+					ele.innerHTML = degreesToDMS(val.toFixed(angdigits))
+					break
+				default:
+					ele.innerHTML = "[bad format " + ele.id + "]"
+					break
+			}
+		} else {
+				ele.innerHTML = "[undefined obj element " + ele.id + "]"
+		}
+	}
+}
 
 /*
  * Build all the flywheel pictures here.
@@ -594,8 +838,6 @@ function buildFlywheels() {
 	drawFlywheelDemo(canvas, fly);
 	var canvasdims = document.getElementById("flywheelDimsCanvas");
 	drawFlywheelDims(canvasdims, fly);
-	var canvasdebug = document.getElementById("flywheelDebugCanvas");
-	drawFlywheelDebug(canvasdebug, fly);
 
 	// Now customize the instructions for this flywheel.
 	
@@ -607,55 +849,9 @@ function buildFlywheels() {
 	// 3-hole vs. 4-hole
 	chooseConditionalHTML("showFor3HoleSpoke", "showFor4HoleSpoke", fly.innerHoleAngle == fly.spokeBisect);
 
-	
-	// Now do some general substitutions of data from the fly object.
-	// Any element of the doc with class="flydata" will have the content substituted.
-	// The id of the element defines what data will be extracted.
-	// Note that this has the potention that multiple elements in the document
-	// have the same id.  But that's ok, because we iterate through them by class and
-	// never look them up by id.  If we find browsers get picky about this, we
-	// could append a suffix _goop and remove it before doing the lookup.
-	var flydataEle = document.getElementsByClassName("flydata");
-	var num = flydataEle.length;
-	var i;
-	for (i=0; i<num; i++) {
-		var ele = flydataEle[i];
-		var idparts = ele.id.split(":");	// Expect field:format
-		var field = idparts[0]
-		var fmt = idparts[1]
-		var fieldparts = field.split(".")
-		var val;
-		switch (fieldparts.length) {	// handle fly.myfield and fly.myfield.xyz
-			case 1:
-				val = fly[fieldparts[0]]
-				break
-			case 2:
-				if (fly[fieldparts[0]]) {
-					val = fly[fieldparts[0]][fieldparts[1]]
-				}
-				break
-		}
-		if (val) {
-			switch (fmt) {
-				case "length":
-					ele.innerHTML = val.toFixed(lendigits)
-					break
-				case "angle":
-					ele.innerHTML = val.toFixed(angdigits)
-					break
-				case "angledms":
-					ele.innerHTML = degreesToDMS(val.toFixed(angdigits))
-					break
-				default:
-					ele.innerHTML = "[bad format " + ele.id + "]"
-					break
-			}
-		} else {
-			ele.innerHTML = "[undefined fly data " + ele.id + "]";
-		}
-
-	}
-
+	// Substitute content of <html class="flydata"> elements.
+	// The id attribute is interpreted and the innerHTML content is updated.
+	doHTMLSubstitutions("flydata", fly)
 	
 	//
 	// Now update cutting schedule tables.
@@ -677,7 +873,7 @@ function buildFlywheels() {
 		var spkcell = row.insertCell(0);
 		var spkang = row.insertCell(1);
 		spkcell.innerHTML = spk+1;   // number from 1
-		spkang.innerHTML = spokeangle;	// These should always be whole degrees, so no sense adding angdigits or DMS.
+		spkang.innerHTML = "<b>" + spokeangle.toFixed(angdigits) + "</b>";	// Always whole degrees, so no sense showing DMS.
 		spokeangle += fly.spokeAngle;
 	}
 	
@@ -699,11 +895,11 @@ function buildFlywheels() {
 		var spkcell = row.insertCell(0);
 		var spkang = row.insertCell(1);
 		spkcell.innerHTML = spk+1;   // number from 1
-		spkang.innerHTML = rightinangle.toFixed(angdigits) + " (" + degreesToDMS(rightinangle.toFixed(angdigits)) + ")";
+		spkang.innerHTML = "&nbsp;<b>"+rightinangle.toFixed(angdigits) + "</b> (" + degreesToDMS(rightinangle.toFixed(angdigits)) + ")";
 		if (rightinangle != leftinangle) {
 			// show left angle also.  Don't include the spoke # (blank)
 			spkang = row.insertCell(2);
-			spkang.innerHTML = leftinangle.toFixed(angdigits) + " (" + degreesToDMS(leftinangle.toFixed(angdigits)) + ")";
+			spkang.innerHTML = "&nbsp;<b>" + leftinangle.toFixed(angdigits) + "</b> (" + degreesToDMS(leftinangle.toFixed(angdigits)) + ")";
 		}
 		rightinangle += fly.spokeAngle;
 		leftinangle += fly.spokeAngle;
@@ -723,14 +919,36 @@ function buildFlywheels() {
 		var spkang2 = row.insertCell(2);
 
 		spkcell.innerHTML = spk+1;   // number from 1
-		spkang1.innerHTML = rightoutangle.toFixed(angdigits) + " (" + degreesToDMS(rightoutangle.toFixed(angdigits)) + ")";
-		spkang2.innerHTML = leftoutangle.toFixed(angdigits) + " (" + degreesToDMS(leftoutangle.toFixed(angdigits)) + ")";
+		spkang1.innerHTML = "&nbsp;<b>"+rightoutangle.toFixed(angdigits) + "</b> (" + degreesToDMS(rightoutangle.toFixed(angdigits)) + ")";
+		spkang2.innerHTML = "&nbsp;<b>"+leftoutangle.toFixed(angdigits) + "</b> (" + degreesToDMS(leftoutangle.toFixed(angdigits)) + ")";
 		
 		rightoutangle += fly.spokeAngle;
 		leftoutangle += fly.spokeAngle;
 	}
 	
-	if (fly.curveAngle == 0) { // QQQ: fix for curves
+	// Now finish with special details for curved or straight spoke instructions.
+	if (fly.curveAngle) {
+		// The location pin table.  
+		table = document.getElementById("locationPinTable");
+		// clear table (leave heading row 0)
+		while (table.rows.length > 1)
+				table.deleteRow(-1);	// delete last row
+		var locangle = fly.locationPinAngle;
+		for (var spk=0; spk < numSpokes; spk++) {
+			var row = table.insertRow(-1);	// append row
+			var spkcell = row.insertCell(0);
+			var spkang = row.insertCell(1);
+			spkcell.innerHTML = spk+1;   // number from 1
+			spkang.innerHTML = "&nbsp;<b>"+locangle.toFixed(angdigits) + "</b> (" + degreesToDMS(locangle.toFixed(angdigits)) + ")"
+			locangle += fly.spokeAngle;
+		}
+		
+		drawCurvedFixtureLayout(document.getElementById("fixtureLayoutFigure"), fly);
+		drawCurvedFixturePlacement(0, document.getElementById("fixturePlacementFigure"), fly);
+		drawCurvedFixturePlacement(1, document.getElementById("fixtureLeftCutPlacementFigure"), fly);
+		drawCurvedFixturePlacement(2, document.getElementById("fixtureRightCutPlacementFigure"), fly);
+	} else {
+	
 		// Now fill in the instSpokeStep*Canvas figures
 		drawStraightSpokeStep(1, document.getElementById("instSpokeStep1Canvas"), fly);
 		drawStraightSpokeStep(2, document.getElementById("instSpokeStep2Canvas"), fly);
@@ -895,14 +1113,30 @@ var fill_none = undefined;
  */
 function makeDrawingContext(canvas, radius)
 {
-	var flyctx = {};  // new object
-	flyctx.canvas = canvas;
-	flyctx.context = canvas.getContext("2d");
-	flyctx.offsetx = canvas.width / 2;
-	flyctx.offsety = canvas.height / 2;
-	flyctx.fscale = Math.min(canvas.width, canvas.height) * 0.90 /
-					(radius * 2);
-	return flyctx;
+	var flyctx = {}  // new object
+	flyctx.canvas = canvas
+	flyctx.context = canvas.getContext("2d")
+	var mindim = Math.min(canvas.width, canvas.height)
+	flyctx.offsetx = mindim / 2
+	flyctx.offsety = flyctx.offsetx
+	flyctx.fscale =  mindim * 0.90 / (radius * 2)
+	return flyctx
+}
+
+/*
+ * Draw text at a given position
+ *
+ *	ctx		drawing context (from makeDrawingContext() above)
+ *	pos		center point
+ *  offset	offset (in pixels -- not scaled)
+ *  text	text to draw
+ */
+function drawText(ctx, pos, offset, text)
+{
+	ctx.context.save()
+	ctx.context.font = "10pt Arial"
+	ctx.context.fillText(text, ctx.offsetx+pos.x*ctx.fscale+offset.x, ctx.offsety-pos.y*ctx.fscale-offset.y)
+	ctx.context.restore()
 }
 
 
@@ -1478,11 +1712,102 @@ function calculateFlywheel(
 			fly.locationPinDiameter = 0.188;	// 3/16" dia
 		}
 		// Place the location pin approximately half way between the outer holes.
-		fly.locationAngle = fly.spokeBisect + fly.curveAngle;
+		fly.locationPinAngle = fly.spokeBisect + fly.curveAngle;
+		fly.locationPinDistance = fly.outerArc - fly.locationPinDiameter;
 		// Now rotate the location pin center from vertical.  Note it is inside the outerArc
 		// because we use diameter instead of radius to pull it away from the outerArc.
-		var edgePt = toPoint(0, fly.outerArc - fly.locationPinDiameter)
-		fly.locationPinCenter = rotate(edgePt, fly.locationAngle)
+		var edgePt = toPoint(0, fly.locationPinDistance)
+		fly.locationPinCenter = rotate(edgePt, fly.locationPinAngle)
+		
+		// Calculate dimensions needed for the fixture plate.  This includes
+		// an example size of the plate as well as the relative positions of the 4
+		// key locations on the plate.
+		
+		// Point A:  The flywheel center (easy, 0,0)
+		// Point B:  The location pin position locationPinCenter
+		// Point C:  The left spoke radius center.   curveCutLeftCenter
+		// Point D:  The right spoke radius center.  curveCutRightCenter
+	
+		// Figure out the "base point" for the fixture.  Is B, C or D lower?
+		// D may be always lower (in Y) than C, but with severe rotation the
+		// location pin B can be lowest of all.  Just check them all.
+		// The "base point" is one of points A,B,C,D, but we don't track which.
+		// The base point is only used for the fixtureAngle calculation below.
+		var basePt;
+		if (fly.curveCutLeftCenter.y < fly.curveCutRightCenter.y) {
+			basePt = fly.curveCutLeftCenter;
+		} else {
+			basePt = fly.curveCutRightCenter;
+		}
+		if (fly.locationPinCenter.y < basePt.y) {
+			basePt = fly.locationPinCenter;
+		}
+		
+		// Now rotate everything so ptA to basePt is a horizontal line.
+		// basePt.x > ptA.x always.  The angle of rotation is usually negative
+		// so we need to rotate counter-clockwise -- but not always.
+		// We rotate around point A so it will not change coordinates.
+		var ptA = toPoint(0,0)
+		var ang = 90 - angle(ptA, basePt)
+		var ptB = rotate(fly.locationPinCenter, ang)
+		var ptC = rotate(fly.curveCutLeftCenter, ang)
+		var ptD = rotate(fly.curveCutRightCenter, ang)
+		
+		// Now estimate a fixture size.  We'll start by using a fraction of the flywheel.
+		// The calculation here is the size of the fixture before we add material below and to the left
+		// of the flywheel center point.   Use 75% of diameter in X and 50% in Y.  Below we will add
+		// 25% below and to the left of the flywheel center.  So the example fixture will be
+		// 100%x75% of the flywheel diameter.  Hopefully this will result in nice round numbers
+		// under the assumption the flywheel diameter is usually a round number.
+		// We also perform bounds checks on the odd chance the milling radius would be too big to
+		// fit.  A *very* small curve angle can do this (<15) and might simply be disallowed.
+		var recommend = toPoint(fly.flywheelDiameter*0.75, fly.flywheelDiameter*0.50)
+		
+		// Go through some calculations to expand the fixture plate size in case B, C or D
+		// is too far out.  As mentioned earlier, we could bound curveangle so this can't happen.
+		
+		// Now calculate a bounding box for the points.  The fixture must be bigger than this.
+		// We know the baseline is along y=0.  Also x>=0.  So ptA is the bottom left of this box.
+		// Find the bound point (upper right)
+		var bound = toPoint(ptB.x, ptB.y)			// start with guess that B is it.
+		if (ptC.x > bound.x) {
+			bound.x = ptC.x
+		}
+		if (ptD.x > bound.x) {
+			bound.x = ptD.x
+		}
+		if (ptC.y > bound.y) {
+			bound.y = ptC.y
+		}
+		if (ptD.y > bound.y) {
+			bound.y = ptD.y
+		}
+		
+		// Add 1/2" or 10mm for working room.  May not be needed, but this isn't much.
+		var slack = 0.5;	// inches
+		if (fly.units == "mm") {
+			slack = 10	// mm
+		}
+		
+		if (bound.x+slack > recommend.x) {
+			recommend.x = bound.x+slack
+		}
+		if (bound.y+slack > recommend.y) {
+			recommend.y = bound.y+slack
+		}
+		// Now add the extra 25% on the other side of the flywheel (negative X and Y).
+		var recommendOffset = toPoint(fly.flywheelDiameter*0.25, fly.flywheelDiameter*0.25)
+		recommend = addPoints(recommend, recommendOffset)
+		
+		// Save the fixture data
+		fly.fixtureSize = recommend
+		fly.fixtureAngle = ang
+		fly.fixtureOffset = recommendOffset  // recommended position for ptA
+		fly.fixtureA = ptA
+		fly.fixtureB = ptB
+		fly.fixtureC = ptC
+		fly.fixtureD = ptD
+
 		
 		// Calculate the inner left thickness point for debug.
 		var ang = angle(fly.curveCutLeftCenter, fly.innerRightSpokeThicknessPoint);
@@ -1681,7 +2006,7 @@ function drawFlywheelDemo(canvas, fly) {
 					"black", pattern_solid)
 
 			var pinCenter = rotate(fly.locationPinCenter, thisangle);
-			drawCircle(flyctx, pinCenter, fly.locationPinDiameter/2, "black", fill_none, pattern_solid);
+			drawCircle(flyctx, pinCenter, fly.locationPinDiameter/2, "lightgray", fill_none, pattern_solid);
 
 
 		} else {
@@ -1728,121 +2053,6 @@ function drawFlywheelDemo(canvas, fly) {
 	}
 }
 
-function drawFlywheelDebug(canvas, fly) {
-
-	var flyctx = makeDrawingContext(canvas, fly.flywheelRadius);
-	var center = toPoint(0,0);
-
-	/* First, draw dim demo by drawing a transparent white rectangle over it.  Cool, no? :) */
-	drawFlywheelDemo(canvas, fly)
-	flyctx.context.save();
-	flyctx.context.fillStyle="white";
-	flyctx.context.globalAlpha="0.65";
-	flyctx.context.fillRect(0,0,canvas.width,canvas.height);
-	flyctx.context.restore();
-	
-	/* Compute and label 4 points for the fixture plan */
-	// Point A:  The flywheel center (easy, 0,0)
-	// Point B:  The location pin position locationPinCenter
-	// Point C:  The left spoke radius center.   curveCutLeftCenter
-	// Point D:  The right spoke radius center.  curveCutRightCenter
-	
-	// figure out the base point for the fixture.  Is B, C or D lower?
-	var basePt;
-	if (fly.curveCutLeftCenter.y < fly.curveCutRightCenter.y) {
-		basePt = fly.curveCutLeftCenter;
-	} else {
-		basePt = fly.curveCutRightCenter;
-	}
-	if (fly.locationPinCenter.y < basePt.y) {
-		basePt = fly.locationPinCenter;
-	}
-	
-	console.log("before: B=" + ptStr(fly.locationPinCenter) + " C=" + ptStr(fly.curveCutLeftCenter) + " D=" + ptStr(fly.curveCutRightCenter)
-			+ " base=" + ptStr(basePt))
-	console.log(" before:  AB=" + distance(toPoint(0,0), fly.locationPinCenter) + " BC=" + distance(fly.locationPinCenter, fly.curveCutLeftCenter)
-		+ " AC=" + distance(toPoint(0,0), fly.curveCutLeftCenter) + " BD=" + distance(fly.locationPinCenter, fly.curveCutRightCenter)
-		+ " AD=" + distance(toPoint(0,0), fly.curveCutRightCenter))
-	console.log(" before CD=" + distance(fly.curveCutLeftCenter, fly.curveCutRightCenter))
-	
-	// Now rotate everything so ptA to basePt is a horizontal line (90 degrees).
-	// basePt.x > ptA.x always.  The angle of rotation is usually negative
-	// so we need to rotate counter-clockwise, but not always.
-	var ptA = toPoint(0,0)
-	var ang = 90 - angle(ptA, basePt)
-	console.log("ang=" + ang)
-	var ptB = rotate(fly.locationPinCenter, ang)
-	var ptC = rotate(fly.curveCutLeftCenter, ang)
-	var ptD = rotate(fly.curveCutRightCenter, ang)
-	
-	console.log("after: B=" + ptStr(ptB) + " C=" + ptStr(ptC) + " D=" + ptStr(ptD)
-			+ " base=" + ptStr(basePt))
-	console.log(" before:  AB=" + distance(ptA, ptB) + " BC=" + distance(ptB, ptC)
-		+ " AC=" + distance(ptA, ptC) + " BD=" + distance(ptB, ptD)
-		+ " AD=" + distance(ptA, ptD))
-
-	// Now calculate a bounding box for the points.  The fixture must be bigger than this.
-	// We know the baseline is along y=0.  Also x>=0.  So ptA is the bottom left of this box.
-	// Find the bound point (upper right)
-	var bound = ptB;	// start here
-	if (ptC.x > bound.x) {
-		bound.x = ptC.x;
-	}
-	if (ptD.x > bound.x) {
-		bound.x = ptD.x;
-	}
-	if (ptC.y > bound.y) {
-		bound.y = ptC.y;
-	}
-	if (ptD.y > bound.y) {
-		bound.y = ptD.y;
-	}
-	console.log("bound=" + ptStr(bound))
-	
-	// Add 1/2" or 10mm for working room.  May not be needed, but this isn't much.
-	var slack = 0.5;	// inches
-	if (fly.units == "mm") {
-		slack = 10;	// mm
-	}
-	
-	// Now estimate a fixture size.  We'll start by using a fraction of the flywheel.
-	// The flywheel center is toward the lower left of the fixture.  We'll recommend a fixture
-	// starting with 75% of the flywheel diameter as a square.  Then check that all the points fit.
-	// If not, extend and include some extra material.  We could round to 1/2 inch or 10mm.
-	// We assume the flywheel center (0,0) as inland 25% of the way on the bottom and left.
-	// So the "working" area of the fixture is only 50% -- the flywheel radius.
-	var recommend = toPoint(fly.flywheelRadius, fly.flywheelRadius)
-	if (bound.x+slack > recommend.x) {
-		recommend.x = bound.x+slack
-	}
-	if (bound.y+slack > recommend.y) {
-		recommend.y = bound.y+slack
-	}
-	// Now add the extra 25% on the other side of the flywheel (negative X and Y)
-	var recommendOffset = toPoint(fly.flywheelRadius/2, fly.flywheelRadius/2)
-	recommend = addPoints(recommend, recommendOffset)
-	
-	console.log("recommend=" + ptStr(recommend) + "  offset=" + ptStr(recommendOffset))
-	
-	// Now rotate this bounding box to match the figure so we can draw it.  The rotation is -ang.
-	// Call the corners JKLM, starting with J=bottom-left and going clockwise.
-	var ptJ = rotate(subtractPoints(recommendOffset, toPoint(0,0)), -ang)
-	var ptK = rotate(subtractPoints(recommendOffset, toPoint(0,recommend.y)), -ang)
-	var ptL = rotate(subtractPoints(recommendOffset, recommend), -ang)
-	var ptM = rotate(subtractPoints(recommendOffset, toPoint(recommend.x, 0)), -ang)
-	console.log("J=" + ptStr(ptJ) + " K=" + ptStr(ptK) + " L=" + ptStr(ptL) + " M=" + ptStr(ptM))
-	
-	drawLine(flyctx, ptJ, ptK, "black", pattern_solid);
-	drawLine(flyctx, ptK, ptL, "black", pattern_solid);
-	drawLine(flyctx, ptL, ptM, "black", pattern_solid);
-	drawLine(flyctx, ptM, ptJ, "black", pattern_solid);
-
-	drawCircle(flyctx, fly.curveCutLeftCenter, 2/flyctx.fscale, "green", "green", pattern_solid);
-	drawCircle(flyctx, fly.curveCutRightCenter, 2/flyctx.fscale, "blue", "blue", pattern_solid);
-	drawCircle(flyctx, fly.locationPinCenter, 1/flyctx.fscale, "black", "black", pattern_solid);
-	drawCircle(flyctx, toPoint(0,0), 1/flyctx.fscale, "black", "black", pattern_solid);
-
-}
 
 /*
  * Draw the Flywheel dimension markings.
@@ -2078,6 +2288,115 @@ function drawStraightSpokeStep(step, canvas, fly) {
 
 }
 
+
+/*
+ * Draw a picture of the fixture layout.
+ */
+function drawCurvedFixtureLayout(canvas, fly) {
+	var flyctx = makeDrawingContext(canvas, fly.flywheelRadius)
+	canvas.width = canvas.width // reset
+	
+	// Rescale this figure since we aren't drawing a flywheel.
+	// Make it fit within 10% of the canvas we are given.
+	var sz = fly.fixtureSize
+	flyctx.fscale = (Math.min(canvas.width/sz.x, canvas.height/sz.y))*0.90
+	flyctx.offsetx = canvas.width*0.05
+	flyctx.offsety = canvas.height*0.95
+
+	// Draw rectangle that represents the fixture.  A drawRect() would be handy.
+	drawLine(flyctx, toPoint(0,0), toPoint(0,sz.y), "black", pattern_solid)
+	drawLine(flyctx, toPoint(0,sz.y), sz, "black", pattern_solid)
+	drawLine(flyctx, sz, toPoint(sz.x,0), "black", pattern_solid)
+	drawLine(flyctx, toPoint(sz.x,0), toPoint(0,0), "black", pattern_solid)
+	
+	var ptA = addPoints(fly.fixtureOffset, fly.fixtureA);
+	var ptB = addPoints(fly.fixtureOffset, fly.fixtureB);
+	var ptC = addPoints(fly.fixtureOffset, fly.fixtureC);
+	var ptD = addPoints(fly.fixtureOffset, fly.fixtureD);
+
+	// Now draw A, B, C, D
+	drawCircle(flyctx, ptA, 2/flyctx.fscale, "black", "black", pattern_solid)
+	drawCircle(flyctx, ptB, 2/flyctx.fscale, "black", "black", pattern_solid)
+	drawCircle(flyctx, ptC, 2/flyctx.fscale, "black", "black", pattern_solid)
+	drawCircle(flyctx, ptD, 2/flyctx.fscale, "black", "black", pattern_solid)
+
+	drawText(flyctx, ptA, toPoint(-10,2), "A")
+	drawText(flyctx, ptB, toPoint(-10,2), "B")
+	drawText(flyctx, ptC, toPoint(-10,2), "C")
+	drawText(flyctx, ptD, toPoint(2,-10), "D")
+}
+
+/*
+ * Draw a picture of the fixture placement under the flywheel.
+ * The flag rightleft has this meaning:
+ *	0:	draw with no cutting arc shown.
+ *	1:  draw with the left arc shown.
+ *  2:	draw with the right arc shown.
+ */
+function drawCurvedFixturePlacement(rightleft, canvas, fly) {
+
+	var flyctx = makeDrawingContext(canvas, fly.flywheelRadius)
+	var center = toPoint(0,0)
+
+	/* First, draw dim demo by drawing a transparent white rectangle over it.  Cool, no? :) */
+	drawFlywheelDemo(canvas, fly)
+	flyctx.context.save()
+	flyctx.context.fillStyle="white"
+	flyctx.context.globalAlpha="0.65"
+	flyctx.context.fillRect(0,0,canvas.width,canvas.height)
+	flyctx.context.restore()
+	
+	// Now rotate the fixture to match the figure so we can draw it.
+	// Call the corners JKLM, starting with J=bottom-left and going clockwise.
+	var ang = fly.fixtureAngle
+	var sz = fly.fixtureSize
+	var shft = fly.fixtureOffset  // rotate around the ptA offset -- the flywheel center
+	var ptJ = rotate(subtractPoints(shft, toPoint(0,0)), -ang)
+	var ptK = rotate(subtractPoints(shft, toPoint(0,sz.y)), -ang)
+	var ptL = rotate(subtractPoints(shft, sz), -ang)
+	var ptM = rotate(subtractPoints(shft, toPoint(sz.x, 0)), -ang)
+	
+	drawLine(flyctx, ptJ, ptK, "black", pattern_solid)
+	drawLine(flyctx, ptK, ptL, "black", pattern_solid)
+	drawLine(flyctx, ptL, ptM, "black", pattern_solid)
+	drawLine(flyctx, ptM, ptJ, "black", pattern_solid)
+	
+	switch (rightleft) {
+		case 0:
+			// Do nothing.
+			break
+		case 1:
+			// Left arc drawn.
+			drawArc(flyctx, fly.curveCutLeftCenter, fly.curveRadius,
+					fly.curveCutLeftStartAngle, fly.curveCutLeftEndAngle,
+					"black", pattern_solid);
+			drawRadialLine(flyctx, fly.curveCutLeftCenter, fly.curveCutLeftStartAngle, fly.curveRadius,
+					"gray", pattern_solid);
+			drawRadialLine(flyctx, fly.curveCutLeftCenter, fly.curveCutLeftEndAngle, fly.curveRadius,
+					"gray", pattern_solid);
+			break
+		case 2:
+			// right arc drawn
+			drawArc(flyctx, fly.curveCutRightCenter, fly.curveRadius,
+					fly.curveCutRightStartAngle, fly.curveCutRightEndAngle,
+					"black", pattern_solid);
+			drawRadialLine(flyctx, fly.curveCutRightCenter, fly.curveCutRightStartAngle, fly.curveRadius,
+					"gray", pattern_solid);
+			drawRadialLine(flyctx, fly.curveCutRightCenter, fly.curveCutRightEndAngle, fly.curveRadius,
+					"gray", pattern_solid);
+			break
+	}
+
+	drawCircle(flyctx, toPoint(0,0), 1/flyctx.fscale, "black", "black", pattern_solid)
+	drawCircle(flyctx, fly.locationPinCenter, 1/flyctx.fscale, "black", "black", pattern_solid)
+	drawCircle(flyctx, fly.curveCutRightCenter, 2/flyctx.fscale, "blue", "blue", pattern_solid)
+	drawCircle(flyctx, fly.curveCutLeftCenter, 2/flyctx.fscale, "green", "green", pattern_solid)
+
+	drawText(flyctx, toPoint(0,0), toPoint(-10,2), "A")
+	drawText(flyctx, fly.locationPinCenter, toPoint(-10,2), "B")
+	drawText(flyctx, fly.curveCutRightCenter, toPoint(-20,5), "C")
+	drawText(flyctx, fly.curveCutLeftCenter, toPoint(10,-15), "D")
+}
 </script>
 
 </body>
