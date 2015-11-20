@@ -798,21 +798,23 @@ function buildFlywheels() {
 	var outholeang = parseFloat(document.getElementById("flywheelOuterHoleAngle").value);
 	var curveangle = parseFloat(document.getElementById("flywheelCurveAngle").value);
 	
-	// Some checks to "fix" invalid flywheels.  This doesn't cover them
-	// all, by any means!
-//	var prevspokes = document.getElementById("prevFlywheelSpokes").value;
-//	if (prevspokes != numSpokes) {
-//		// If the previous # spokes had a 3-hole cutout then keep it that way.
-//		if (inholeang == 180/prevspokes) {
-//			inholeang = 180/numSpokes;
-//			document.getElementById("flywheelInnerHoleAngle").value = inholeang.toFixed(angdigits);
-//		}
-//	}
-//	document.getElementById("prevFlywheelSpokes").value = numSpokes;
-//	if (inholeang > 180/numSpokes) {
-//		inholeang = 180/numSpokes;
-//		document.getElementById("flywheelInnerHoleAngle").value = inholeang.toFixed(angdigits);
-//	}	
+	// Here's a trick to keep a flywheel at a 3-hole design when the spoke count is changed.
+	var prevspokes = document.getElementById("prevFlywheelSpokes").value;
+	if (prevspokes != numSpokes) {
+		// If the previous # spokes had a 3-hole cutout then keep it that way.
+		if (inholeang == 180/prevspokes) {
+			inholeang = 180/numSpokes;
+			document.getElementById("flywheelInnerHoleAngle").value = inholeang.toFixed(angdigits);
+		}
+	}
+	document.getElementById("prevFlywheelSpokes").value = numSpokes;
+
+	// Sanity check so that inside holes don't cross-cross the wrong way
+	// As a side effect, you can enter 99 degrees and it will "adjust" to 3-hole automagically
+	if (inholeang > 180/numSpokes) {
+		inholeang = 180/numSpokes;
+		document.getElementById("flywheelInnerHoleAngle").value = inholeang.toFixed(angdigits);
+	}	
 	
 	var fly = calculateFlywheel(
 			units,					// mm or in.  Hardly used, but can be ref'ed in the html.
