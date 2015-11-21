@@ -49,7 +49,7 @@ table, th, td {
 </head>
 
 <body onLoad="buildFlywheels()">
-<h2>Flywheel builder v1.5.5</h2>
+<h2>Flywheel builder v2.0</h2>
 <form name="flywheelParms" onChange="buildFlywheels()">
 <!-- Use a select for spokes so crazy numbers (like fractions) can't happen -->
 <canvas id="flywheelDemoCanvas" width="400" height="400"
@@ -72,20 +72,40 @@ Units: <select id="flywheelUnits">
 		</select>
 Presets:  <select id="flywheelPresets" onchange="selectedPreset()">
 		<option value="">Choose a Pre-designed Flywheel</option>
+		<option value="spokes=3&units=in&dia=2.0&rim=0.125&hub=0.500&shaft=0.250&india=0.188&outdia=0.188&indis=0.438&outdis=0.75&inang=25.4&outang=14.5&curve=0">
+		2" Diameter 3-spoke Pulley</option>
 		<option value="spokes=6&units=in&dia=2.5&rim=0.25&hub=0.500&shaft=0.250&india=0.250&outdia=0.125&indis=0.438&outdis=0.875&inang=30.0&outang=8.2&curve=0">
 		2.5" Diameter 6-spoke from Elmers #24 Beam</option>
+		<option value="spokes=4&units=in&dia=2.0&rim=0.094&hub=0.688&shaft=0.312&india=0.188&outdia=0.188&indis=0.500&outdis=0.750&inang=18.8&outang=12.4&curve=0">
+		3" Diameter 4-spoke Pulley</option>
 		<option value="spokes=4&units=in&dia=3.0&rim=0.375&hub=0.625&shaft=0.250&india=0.250&outdia=0.250&indis=0.438&outdis=1.000&inang=32.0&outang=12.0&curve=0">
 		3" Diameter 4-spoke Simple</option>
 		<option value="spokes=6&units=in&dia=3.0&rim=0.375&hub=0.500&shaft=0.250&india=0.188&outdia=0.125&indis=0.438&outdis=1.000&inang=30.0&outang=9.0&curve=0">
 		3" Diameter 6-spoke from Elmer's #5 Geared</option>
+		<option value="spokes=6&units=mm&dia=75.00&rim=1.50&hub=14&shaft=6.4&india=7.00&outdia=3.00&indis=12&outdis=30.00&inang=30&outang=7.7&curve=0">
+		75mm Diameter 6-spoke Thin</option>
 		<option value="spokes=5&units=in&dia=4.0&rim=0.312&hub=0.625&shaft=0.313&india=0.375&outdia=0.188&indis=0.625&outdis=1.438&inang=36.0&outang=8.0&curve=0">
 		4" Diameter 5-spoke Thick</option>
+		<option value="spokes=5&units=in&dia=4.0&rim=0.312&hub=0.625&shaft=0.313&india=0.375&outdia=0.188&indis=0.625&outdis=1.438&inang=36.0&outang=9.5&curve=35">
+		4" Diameter 5-spoke Thick Curved</option>
 		<option value="spokes=5&units=in&dia=4.0&rim=0.188&hub=0.625&shaft=0.313&india=0.375&outdia=0.188&indis=0.625&outdis=1.625&inang=36.0&outang=8.0&curve=0">
 		4" Diameter 5-spoke Thin</option>
+		<option value="spokes=5&units=in&dia=4.0&rim=0.438&hub=1.000&shaft=0.375&india=0.625&outdia=0.250&indis=0.925&outdis=1.438&inang=36.0&outang=20&curve=39">
+		4" Diameter 5-spoke Very Curvy</option>
+		<option value="spokes=6&units=in&dia=4.5&rim=0.250&hub=0.750&shaft=0.375&india=0.250&outdia=0.188&indis=0.625&outdis=1.625&inang=30.0&outang=7.0&curve=0">
+		4.5" Diameter 6-spoke Taper</option>
+		<option value="spokes=5&units=in&dia=5.0&rim=0.5&hub=1.125&shaft=0.5&india=0.750&outdia=0.375&indis=1.000&outdis=1.688&inang=36.0&outang=15&curve=30">
+		5" Diameter 5-spoke Thick-rimmed Curved</option>
 		<option value="spokes=6&units=in&dia=5.0&rim=0.094&hub=0.875&shaft=0.375&india=0.625&outdia=0.188&indis=0.875&outdis=2.125&inang=30.0&outang=6.0&curve=0">
-		5.0" 6-spoke Easton &amp; Anderson Grasshopper</option>
+		5" 6-spoke Easton &amp; Anderson Grasshopper</option>
+		<option value="spokes=5&units=in&dia=5.5&rim=0.250&hub=0.750&shaft=0.375&india=0.250&outdia=0.188&indis=0.625&outdis=2.0&inang=36.0&outang=7.0&curve=45">
+		5.5" 5-spoke Curved</option>
+		<option value="spokes=6&units=in&dia=5.5&rim=0.250&hub=0.750&shaft=0.375&india=0.250&outdia=0.188&indis=0.625&outdis=2.0&inang=30.0&outang=7.0&curve=0">
+		5.5" 6-spoke Light Taper</option>
 		<option value="spokes=6&units=in&dia=6.5&rim=0.250&hub=0.625&shaft=0.313&india=0.25&outdia=0.188&indis=0.625&outdis=2.75&inang=24&outang=4.6&curve=0">
 		6.5" Diameter 6-spoke Thin</option>
+		<option value="spokes=6&units=in&dia=7.0&rim=0.250&hub=0.625&shaft=0.313&india=0.375&outdia=0.188&indis=0.625&outdis=2.75&inang=30.0&outang=4.6&curve=30">
+		7" Diameter 6-spoke Thin Curved</option>
 
 		</select>
 		
@@ -123,14 +143,9 @@ x=<b class="flydata" id="cutPosition.x:length">0</b> plus half the cutter diamet
 instructions below to build this particular flywheel design.
 
 <p class="showForCurvedSpoke">
-This is a curved spoke flywheel.  A fixture must be built to mill the curved spokes.
+This is a curved spoke flywheel and a fixture must be built to mill the curved spokes.
 This fixture must offset the center of the flywheel <b class="flydata" id="curveRadius:length">0</b>
-from the center of the RT.
-The left cut center is
-(<span class="flydata" id="curveCutLeftCenter.x:length">0</span>,<span class="flydata" id="curveCutLeftCenter.y:length">0</span>)
-and the right cut center is
-(<span class="flydata" id="curveCutRightCenter.x:length">0</span>,<span class="flydata" id="curveCutRightCenter.y:length">0</span>)
-from the flywheel hub center.
+from the center of the RT.  Construction and use of the fixture is explained below.
 
 <h1>Fabrication of this Flywheel</h1>
 This generated guide provides instructions for cutting out the web in the flywheel design shown above.
